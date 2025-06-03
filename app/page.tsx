@@ -372,7 +372,7 @@ export default function AvantGardePortfolio() {
                 initial={{ opacity: 0, y: 100 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.4 }}
-                className="text-[12vw] sm:text-[12vw] md:text-[8vw] lg:text-[8vw] xl:text-[8rem] font-black leading-[0.9] tracking-tighter mb-12"
+f                className="text-[12vw] sm:text-[12vw] md:text-[8vw] lg:text-[8vw] xl:text-[8rem] font-black leading-[0.9] tracking-tighter mb-12"
               >
                 Nickolus
                 <br />
