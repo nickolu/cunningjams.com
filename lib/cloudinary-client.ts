@@ -11,6 +11,7 @@ export interface CloudinaryMedia {
   original_filename?: string;
   resource_type: 'image' | 'video';
   duration?: number; // For videos
+  custom_order?: number | null; // For custom ordering
 }
 
 // Keep backward compatibility

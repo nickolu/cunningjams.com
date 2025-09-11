@@ -8,34 +8,47 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 const ALBUM_PASSWORD = process.env.ALBUM_PASSWORD || 'colorado2025';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin2025';
 const SESSION_COOKIE_NAME = 'album-session';
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 
 export interface SessionPayload {
   authenticated: boolean;
+  isAdmin: boolean;
   expiresAt: Date;
+  [key: string]: any; // Add index signature for JWT compatibility
 }
 
 /**
  * Validates the provided password against the configured album password
+ * Returns an object indicating authentication status and admin rights
  */
-export async function validatePassword(password: string): Promise<boolean> {
+export async function validatePassword(password: string): Promise<{ authenticated: boolean; isAdmin: boolean }> {
   try {
-    // For simplicity, we'll do a direct comparison
-    // In a real app, you'd hash the stored password too
-    return password === ALBUM_PASSWORD;
+    // Check if password matches admin password
+    if (password === ADMIN_PASSWORD) {
+      return { authenticated: true, isAdmin: true };
+    }
+    
+    // Check if password matches regular album password
+    if (password === ALBUM_PASSWORD) {
+      return { authenticated: true, isAdmin: false };
+    }
+    
+    return { authenticated: false, isAdmin: false };
   } catch (error) {
     console.error('Password validation error:', error);
-    return false;
+    return { authenticated: false, isAdmin: false };
   }
 }
 
 /**
  * Creates a JWT session token
  */
-export async function createSession(): Promise<string> {
+export async function createSession(isAdmin: boolean = false): Promise<string> {
   const payload: SessionPayload = {
     authenticated: true,
+    isAdmin,
     expiresAt: new Date(Date.now() + SESSION_DURATION),
   };
 
@@ -54,7 +67,7 @@ export async function createSession(): Promise<string> {
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    const sessionPayload = payload as SessionPayload;
+    const sessionPayload = payload as unknown as SessionPayload;
     
     // Check if session has expired
     if (new Date() > new Date(sessionPayload.expiresAt)) {
@@ -116,6 +129,14 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function isAuthenticated(): Promise<boolean> {
   const session = await getSession();
   return session?.authenticated === true;
+}
+
+/**
+ * Checks if the current request has admin privileges
+ */
+export async function isAdmin(): Promise<boolean> {
+  const session = await getSession();
+  return session?.authenticated === true && session?.isAdmin === true;
 }
 
 /**

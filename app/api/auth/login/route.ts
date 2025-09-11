@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValid = await validatePassword(password);
+    const validationResult = await validatePassword(password);
 
-    if (!isValid) {
+    if (!validationResult.authenticated) {
       return Response.json(
         { error: 'Invalid password' },
         { status: 401 }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session and set cookie
-    const sessionToken = await createSession();
+    const sessionToken = await createSession(validationResult.isAdmin);
     const response = setSessionCookie(sessionToken);
 
     return response;

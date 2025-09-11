@@ -17,18 +17,41 @@ export const ALBUM_FOLDER = '2025-steves-40th';
 // Re-export types from client module
 export type { CloudinaryMedia, CloudinaryImage } from './cloudinary-client';
 
+export type SortOption = 'custom' | 'newest' | 'oldest' | 'name-asc' | 'name-desc';
+
 /**
  * Fetches all media (images and videos) from the album folder
  */
-export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
+export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<CloudinaryImage[]> {
   try {
-    const result = await cloudinary.search
+    let searchQuery = cloudinary.search
       .expression(`folder:${ALBUM_FOLDER}`)
-      .sort_by('created_at', 'desc')
-      .max_results(500) // Adjust as needed
-      .execute();
+      .max_results(500); // Adjust as needed
+    
+    // Apply sorting based on sortBy parameter
+    switch (sortBy) {
+      case 'newest':
+        searchQuery = searchQuery.sort_by('created_at', 'desc');
+        break;
+      case 'oldest':
+        searchQuery = searchQuery.sort_by('created_at', 'asc');
+        break;
+      case 'name-asc':
+        searchQuery = searchQuery.sort_by('public_id', 'asc');
+        break;
+      case 'name-desc':
+        searchQuery = searchQuery.sort_by('public_id', 'desc');
+        break;
+      case 'custom':
+      default:
+        // For custom sort, we'll fetch all and sort by custom_order context
+        searchQuery = searchQuery.sort_by('created_at', 'desc');
+        break;
+    }
+    
+    const result = await searchQuery.execute();
 
-    return result.resources.map((resource: any) => ({
+    let photos = result.resources.map((resource: any) => ({
       public_id: resource.public_id,
       secure_url: resource.secure_url,
       width: resource.width,
@@ -39,7 +62,25 @@ export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
       original_filename: resource.original_filename,
       resource_type: resource.resource_type,
       duration: resource.duration,
+      custom_order: resource.context?.custom_order ? parseInt(resource.context.custom_order) : null,
     }));
+
+    // If using custom sort, sort by custom_order (nulls last, then by created_at)
+    if (sortBy === 'custom') {
+      photos.sort((a: any, b: any) => {
+        // If both have custom_order, sort by that
+        if (a.custom_order !== null && b.custom_order !== null) {
+          return a.custom_order - b.custom_order;
+        }
+        // If only one has custom_order, prioritize it
+        if (a.custom_order !== null) return -1;
+        if (b.custom_order !== null) return 1;
+        // If neither has custom_order, sort by created_at (newest first)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    }
+
+    return photos;
   } catch (error) {
     console.error('Error fetching album photos:', error);
     
@@ -105,6 +146,24 @@ export async function uploadToAlbum(
   }
 }
 
+
+/**
+ * Updates the custom order for multiple images (admin function)
+ */
+export async function updateCustomOrder(orderUpdates: { publicId: string; order: number }[]): Promise<boolean> {
+  try {
+    // Update each image's context with the new custom_order
+    const updatePromises = orderUpdates.map(({ publicId, order }) =>
+      cloudinary.uploader.add_context(`custom_order=${order}`, [publicId])
+    );
+
+    await Promise.all(updatePromises);
+    return true;
+  } catch (error) {
+    console.error('Error updating custom order:', error);
+    return false;
+  }
+}
 
 /**
  * Deletes an image from Cloudinary (admin function)

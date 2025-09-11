@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getAlbumPhotos } from '@/lib/cloudinary';
+import { getAlbumPhotos, SortOption } from '@/lib/cloudinary';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -22,10 +22,14 @@ export async function GET(request: NextRequest) {
     }
     console.log(`[PHOTOS-${requestId}] ✅ Authentication successful`);
 
+    // Get sort parameter from URL
+    const { searchParams } = new URL(request.url);
+    const sortBy = (searchParams.get('sort') as SortOption) || 'custom';
+
     // Fetch photos from Cloudinary
-    console.log(`[PHOTOS-${requestId}] 🔍 Fetching photos from Cloudinary...`);
+    console.log(`[PHOTOS-${requestId}] 🔍 Fetching photos from Cloudinary with sort: ${sortBy}...`);
     const fetchStartTime = Date.now();
-    const photos = await getAlbumPhotos();
+    const photos = await getAlbumPhotos(sortBy);
     const fetchTime = Date.now() - fetchStartTime;
 
     const totalTime = Date.now() - startTime;
