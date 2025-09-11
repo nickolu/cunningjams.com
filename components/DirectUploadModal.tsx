@@ -42,7 +42,7 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
       uploadPreset={uploadPreset}
       options={{
         multiple: true,
-        maxFiles: 20,
+        maxFiles: 500,
         folder: '2025-steves-40th',
         resourceType: 'auto',
         clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'],
