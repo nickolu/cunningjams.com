@@ -48,8 +48,10 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
   };
 
   const addFiles = (newFiles: File[]) => {
-    const imageFiles = newFiles.filter(file => file.type.startsWith('image/'));
-    const fileStatuses: FileUploadStatus[] = imageFiles.map(file => ({
+    const mediaFiles = newFiles.filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    const fileStatuses: FileUploadStatus[] = mediaFiles.map(file => ({
       file,
       status: 'pending',
       progress: 0,
@@ -57,10 +59,12 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
     
     setFiles(prev => [...prev, ...fileStatuses]);
     
-    // Show warning for non-image files
-    const nonImageFiles = newFiles.filter(file => !file.type.startsWith('image/'));
-    if (nonImageFiles.length > 0) {
-      toast.warning(`${nonImageFiles.length} non-image files were ignored`);
+    // Show warning for non-media files
+    const nonMediaFiles = newFiles.filter(file => 
+      !file.type.startsWith('image/') && !file.type.startsWith('video/')
+    );
+    if (nonMediaFiles.length > 0) {
+      toast.warning(`${nonMediaFiles.length} non-media files were ignored`);
     }
   };
 
@@ -165,10 +169,10 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
           >
             <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-lg font-medium mb-2">
-              Drop photos here or click to browse
+              Drop photos & videos here or click to browse
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Supports JPEG, PNG, WebP files up to 10MB each
+              Supports images (JPEG, PNG, WebP) and videos (MP4, MOV, AVI) up to 100MB each
             </p>
             <Button 
               variant="outline" 
@@ -181,7 +185,7 @@ export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalPr
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*"
+              accept="image/*,video/*"
               onChange={handleFileSelect}
               className="hidden"
             />

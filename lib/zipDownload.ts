@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { CloudinaryImage } from './cloudinary';
+import { CloudinaryImage } from './cloudinary-client';
 
 export async function downloadPhotosAsZip(photos: CloudinaryImage[]) {
   if (photos.length === 0) {

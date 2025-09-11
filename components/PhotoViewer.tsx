@@ -1,4 +1,4 @@
-import { CloudinaryImage } from '@/lib/cloudinary';
+import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -87,26 +87,44 @@ export function PhotoViewer({
             </Button>
           )}
 
-          {/* Image */}
+          {/* Media Content */}
           <div className="relative w-full h-full max-w-full max-h-full flex items-center justify-center p-8">
-            <Image
-              src={photo.secure_url}
-              alt={photo.original_filename || 'Photo'}
-              width={photo.width}
-              height={photo.height}
-              className="max-w-full max-h-full object-contain"
-              priority
-            />
+            {photo.resource_type === 'video' ? (
+              <video
+                src={photo.secure_url}
+                controls
+                className="max-w-full max-h-full object-contain"
+                preload="metadata"
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <Image
+                src={photo.secure_url}
+                alt={photo.original_filename || 'Photo'}
+                width={photo.width}
+                height={photo.height}
+                className="max-w-full max-h-full object-contain"
+                priority
+              />
+            )}
           </div>
 
-          {/* Photo info */}
+          {/* Media info */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-center">
             <p className="text-sm opacity-75">
               {currentIndex + 1} of {totalCount}
+              {photo.resource_type === 'video' && ' (Video)'}
             </p>
             {photo.original_filename && (
               <p className="text-xs opacity-60 mt-1">
                 {photo.original_filename}
+              </p>
+            )}
+            {photo.resource_type === 'video' && photo.duration && (
+              <p className="text-xs opacity-60 mt-1">
+                Duration: {Math.floor(photo.duration / 60)}:{String(Math.floor(photo.duration % 60)).padStart(2, '0')}
               </p>
             )}
           </div>

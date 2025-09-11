@@ -12,7 +12,7 @@ import {
 import { Upload, Menu, LogOut } from 'lucide-react';
 import { UploadModal } from '@/components/UploadModal';
 import { DownloadButton } from '@/components/DownloadButton';
-import { CloudinaryImage } from '@/lib/cloudinary';
+import { CloudinaryImage } from '@/lib/cloudinary-client';
 
 interface HeaderProps {
   photos?: CloudinaryImage[];

@@ -7,7 +7,7 @@ import { LoadingGallery } from '@/components/LoadingGallery';
 import { EmptyState } from '@/components/EmptyState';
 import { Header } from '@/components/Header';
 import { DownloadButton } from '@/components/DownloadButton';
-import { CloudinaryImage } from '@/lib/cloudinary';
+import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { toast } from 'sonner';
 
 export function PhotoGallery() {
@@ -104,7 +104,7 @@ export function PhotoGallery() {
             Colorado Trip 2025
           </p>
           <p className="text-sm text-muted-foreground">
-            {photos.length} photo{photos.length !== 1 ? 's' : ''} shared
+            {photos.length} item{photos.length !== 1 ? 's' : ''} shared
           </p>
         </div>
 

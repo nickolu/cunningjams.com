@@ -1,27 +1,23 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Ensure this only runs on the server
+if (typeof window === 'undefined') {
+  // Configure Cloudinary only on server
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
 
 export const ALBUM_FOLDER = '2025-steves-40th';
 
-export interface CloudinaryImage {
-  public_id: string;
-  secure_url: string;
-  width: number;
-  height: number;
-  format: string;
-  created_at: string;
-  bytes: number;
-  original_filename?: string;
-}
+// Re-export types from client module
+export type { CloudinaryMedia, CloudinaryImage } from './cloudinary-client';
 
 /**
- * Fetches all images from the album folder
+ * Fetches all media (images and videos) from the album folder
  */
 export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
   try {
@@ -40,6 +36,8 @@ export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
       created_at: resource.created_at,
       bytes: resource.bytes,
       original_filename: resource.original_filename,
+      resource_type: resource.resource_type,
+      duration: resource.duration,
     }));
   } catch (error) {
     console.error('Error fetching album photos:', error);
@@ -62,11 +60,14 @@ export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
  */
 export async function uploadToAlbum(
   file: Buffer,
-  filename?: string
+  filename?: string,
+  fileType?: string
 ): Promise<CloudinaryImage> {
   try {
-    // Convert buffer to base64 data URI for Cloudinary
-    const base64String = `data:image/jpeg;base64,${file.toString('base64')}`;
+    // Determine the MIME type for the data URI
+    const isVideo = fileType?.startsWith('video/');
+    const mimeType = fileType || (isVideo ? 'video/mp4' : 'image/jpeg');
+    const base64String = `data:${mimeType};base64,${file.toString('base64')}`;
     
     const result = await cloudinary.uploader.upload(base64String, {
       folder: ALBUM_FOLDER,
@@ -74,6 +75,12 @@ export async function uploadToAlbum(
       resource_type: 'auto',
       quality: 'auto',
       fetch_format: 'auto',
+      // Video-specific optimizations
+      ...(isVideo && {
+        eager: [
+          { width: 400, height: 300, crop: 'pad', format: 'jpg' }, // Generate thumbnail
+        ],
+      }),
     });
 
     return {
@@ -85,6 +92,8 @@ export async function uploadToAlbum(
       created_at: result.created_at,
       bytes: result.bytes,
       original_filename: result.original_filename,
+      resource_type: result.resource_type,
+      duration: result.duration,
     };
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error);
@@ -92,48 +101,6 @@ export async function uploadToAlbum(
   }
 }
 
-/**
- * Generates optimized image URLs for different use cases
- */
-export function getOptimizedImageUrl(
-  publicId: string,
-  options: {
-    width?: number;
-    height?: number;
-    quality?: string | number;
-    format?: string;
-    crop?: string;
-  } = {}
-): string {
-  const {
-    width,
-    height,
-    quality = 'auto',
-    format = 'auto',
-    crop = 'fill',
-  } = options;
-
-  let transformation = `q_${quality},f_${format}`;
-  
-  if (width || height) {
-    transformation += `,c_${crop}`;
-    if (width) transformation += `,w_${width}`;
-    if (height) transformation += `,h_${height}`;
-  }
-
-  return cloudinary.url(publicId, {
-    transformation,
-  });
-}
-
-/**
- * Generates a download URL for an image
- */
-export function getDownloadUrl(publicId: string): string {
-  return cloudinary.url(publicId, {
-    flags: 'attachment',
-  });
-}
 
 /**
  * Deletes an image from Cloudinary (admin function)

@@ -9,6 +9,7 @@ Create a `.env.local` file in the root directory with the following variables:
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 
 # Album Authentication
 ALBUM_PASSWORD=colorado2025
@@ -25,6 +26,7 @@ NEXTAUTH_SECRET=your_session_secret_key_here
 2. **Set up environment variables**:
    - Copy the example above to `.env.local`
    - Replace `your_cloud_name`, `your_api_key`, and `your_api_secret` with your actual Cloudinary credentials
+   - **Important**: Use the same value for both `CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
    - Generate a secure random string for `NEXTAUTH_SECRET`
    - Change `ALBUM_PASSWORD` to your desired password
 

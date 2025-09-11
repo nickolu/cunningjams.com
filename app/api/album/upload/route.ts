@@ -31,14 +31,16 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       try {
         // Validate file type
-        if (!file.type.startsWith('image/')) {
-          errors.push(`${file.name}: Not an image file`);
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+          errors.push(`${file.name}: Not a supported media file`);
           continue;
         }
 
-        // Validate file size (10MB limit)
-        if (file.size > 10 * 1024 * 1024) {
-          errors.push(`${file.name}: File too large (max 10MB)`);
+        // Validate file size (100MB limit for videos, 10MB for images)
+        const maxSize = file.type.startsWith('video/') ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+          const maxSizeText = file.type.startsWith('video/') ? '100MB' : '10MB';
+          errors.push(`${file.name}: File too large (max ${maxSizeText})`);
           continue;
         }
 
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(bytes);
 
         // Upload to Cloudinary
-        const result = await uploadToAlbum(buffer, file.name);
+        const result = await uploadToAlbum(buffer, file.name, file.type);
         uploadResults.push({
           filename: file.name,
           public_id: result.public_id,

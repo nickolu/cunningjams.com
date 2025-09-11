@@ -7,9 +7,9 @@ export function EmptyState() {
         <ImageIcon className="w-12 h-12 text-muted-foreground" />
       </div>
       
-      <h3 className="text-2xl font-semibold mb-2">No photos yet</h3>
+      <h3 className="text-2xl font-semibold mb-2">No media yet</h3>
       <p className="text-muted-foreground mb-6 max-w-md">
-        Be the first to share memories from Steve's 40th birthday Colorado trip!
+        Be the first to share photos and videos from Steve's 40th birthday Colorado trip!
       </p>
       
       <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground bg-muted/30 px-4 py-3 rounded-lg">

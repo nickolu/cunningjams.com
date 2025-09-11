@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Download, Loader2 } from 'lucide-react';
-import { CloudinaryImage } from '@/lib/cloudinary';
+import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { downloadPhotosAsZip } from '@/lib/zipDownload';
 import { toast } from 'sonner';
 
