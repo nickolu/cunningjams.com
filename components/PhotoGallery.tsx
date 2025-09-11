@@ -9,6 +9,7 @@ import { Header } from '@/components/Header';
 import { DownloadButton } from '@/components/DownloadButton';
 import { SortControls } from '@/components/SortControls';
 import { DraggablePhotoCard } from '@/components/DraggablePhotoCard';
+import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { SortOption } from '@/lib/cloudinary';
 import { toast } from 'sonner';
@@ -40,6 +41,8 @@ export function PhotoGallery() {
   const [isSettingCustom, setIsSettingCustom] = useState(false);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -303,6 +306,63 @@ export function PhotoGallery() {
     }
   };
 
+  const handleDeleteSelected = (event: React.MouseEvent) => {
+    if (selectedPhotoIds.size === 0) return;
+    
+    // Check if shift key is pressed to bypass confirmation
+    if (event.shiftKey) {
+      confirmDelete();
+    } else {
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (selectedPhotoIds.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const photoIds = Array.from(selectedPhotoIds);
+      const response = await fetch('/api/album/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete photos');
+      }
+
+      const result = await response.json();
+      
+      if (result.failed > 0) {
+        toast.error(result.message);
+      } else {
+        toast.success(result.message);
+      }
+
+      // Refresh the gallery and clear selection
+      clearSelection();
+      setIsMultiSelectMode(false);
+      fetchPhotos();
+      
+    } catch (error) {
+      console.error('Error deleting photos:', error);
+      toast.error('Failed to delete photos');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    if (!isDeleting) {
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   // Calculate grid classes based on thumbnail size
   const getGridClasses = () => {
     const gridClasses = {
@@ -367,6 +427,7 @@ export function PhotoGallery() {
           selectedCount={selectedPhotoIds.size}
           onSelectAll={selectAllPhotos}
           onClearSelection={clearSelection}
+          onDeleteSelected={handleDeleteSelected}
         />
 
         {/* Photo Grid */}
@@ -407,6 +468,15 @@ export function PhotoGallery() {
           totalCount={photos.length}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        photoCount={selectedPhotoIds.size}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

@@ -229,4 +229,51 @@ export async function deleteImage(publicId: string): Promise<boolean> {
   }
 }
 
+/**
+ * Deletes multiple images from Cloudinary (admin function)
+ */
+export async function deleteImages(publicIds: string[]): Promise<{ successful: string[], failed: string[] }> {
+  try {
+    // Use Cloudinary's bulk delete API for better performance
+    const result = await cloudinary.api.delete_resources(publicIds);
+    
+    const successful: string[] = [];
+    const failed: string[] = [];
+    
+    // Parse the results
+    for (const [publicId, status] of Object.entries(result.deleted)) {
+      if (status === 'deleted') {
+        successful.push(publicId);
+      } else {
+        failed.push(publicId);
+      }
+    }
+    
+    // Handle any that weren't in the deleted object (likely failed)
+    for (const publicId of publicIds) {
+      if (!result.deleted[publicId]) {
+        failed.push(publicId);
+      }
+    }
+    
+    return { successful, failed };
+  } catch (error) {
+    console.error('Error deleting images:', error);
+    // If bulk delete fails, fall back to individual deletes
+    const successful: string[] = [];
+    const failed: string[] = [];
+    
+    for (const publicId of publicIds) {
+      const success = await deleteImage(publicId);
+      if (success) {
+        successful.push(publicId);
+      } else {
+        failed.push(publicId);
+      }
+    }
+    
+    return { successful, failed };
+  }
+}
+
 export default cloudinary;

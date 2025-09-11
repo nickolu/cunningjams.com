@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ArrowUpDown, Grid3X3, Grid2X2, Save, CheckSquare, Square, MousePointer } from 'lucide-react';
+import { ArrowUpDown, Grid3X3, Grid2X2, Save, CheckSquare, Square, MousePointer, Trash2 } from 'lucide-react';
 import { SortOption } from '@/lib/cloudinary';
 
 interface SortControlsProps {
@@ -25,6 +25,7 @@ interface SortControlsProps {
   selectedCount?: number;
   onSelectAll?: () => void;
   onClearSelection?: () => void;
+  onDeleteSelected?: (event: React.MouseEvent) => void;
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -48,7 +49,8 @@ export function SortControls({
   onToggleMultiSelect,
   selectedCount = 0,
   onSelectAll,
-  onClearSelection
+  onClearSelection,
+  onDeleteSelected
 }: SortControlsProps) {
   const [isSettingCustom, setIsSettingCustom] = useState(false);
 
@@ -175,10 +177,22 @@ export function SortControls({
                 Clear Selection
               </Button>
             )}
+
+            {onDeleteSelected && selectedCount > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onDeleteSelected}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected
+              </Button>
+            )}
           </div>
 
           <div className="text-xs text-blue-600 dark:text-blue-400 ml-auto">
-            Click photos to select • Drag selected photos to reorder as a group
+            Click photos to select • Drag selected photos to reorder as a group • Shift+click Delete to skip confirmation
           </div>
         </div>
       )}
