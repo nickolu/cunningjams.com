@@ -42,12 +42,12 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
       uploadPreset={uploadPreset}
       options={{
         multiple: true,
-        maxFiles: 20,
+        maxFiles: 500,
         folder: '2025-steves-40th',
         resourceType: 'auto',
         clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'],
         maxFileSize: 100000000, // 100MB
-        sources: ['local', 'camera'],
+        sources: ['local', 'google_drive'],
         showAdvancedOptions: false,
         cropping: false,
         showSkipCropButton: false,
@@ -82,7 +82,20 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
         onUploadComplete?.();
       }}
     >
-      {({ open }) => children({ open, isUploading })}
+      {({ open }) => {
+        const safeOpen = () => {
+          try {
+            console.log('📤 Opening Cloudinary widget...');
+            open();
+          } catch (error) {
+            console.error('❌ Error opening Cloudinary widget:', error);
+            setIsUploading(false);
+            toast.error('Failed to open upload widget. Please try again.');
+          }
+        };
+        
+        return children({ open: safeOpen, isUploading });
+      }}
     </CldUploadWidget>
   );
 }
