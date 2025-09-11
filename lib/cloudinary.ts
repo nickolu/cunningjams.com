@@ -20,12 +20,18 @@ export type { CloudinaryMedia, CloudinaryImage } from './cloudinary-client';
  * Fetches all media (images and videos) from the album folder
  */
 export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
+  const startTime = Date.now();
+  console.log(`[CLOUDINARY] 🔍 Fetching photos from folder: ${ALBUM_FOLDER}`);
+  
   try {
     const result = await cloudinary.search
       .expression(`folder:${ALBUM_FOLDER}`)
       .sort_by('created_at', 'desc')
       .max_results(500) // Adjust as needed
       .execute();
+    
+    const fetchTime = Date.now() - startTime;
+    console.log(`[CLOUDINARY] ✅ Found ${result.resources.length} items in ${fetchTime}ms`);
 
     return result.resources.map((resource: any) => ({
       public_id: resource.public_id,
@@ -40,13 +46,14 @@ export async function getAlbumPhotos(): Promise<CloudinaryImage[]> {
       duration: resource.duration,
     }));
   } catch (error) {
-    console.error('Error fetching album photos:', error);
+    const fetchTime = Date.now() - startTime;
+    console.error(`[CLOUDINARY] ❌ Error fetching album photos (${fetchTime}ms):`, error);
     
     // If the folder doesn't exist yet, return empty array instead of throwing
     if (error && typeof error === 'object' && 'error' in error) {
       const cloudinaryError = error.error as any;
       if (cloudinaryError?.http_code === 400 || cloudinaryError?.message?.includes('folder')) {
-        console.log('Album folder not found, returning empty array');
+        console.log(`[CLOUDINARY] ℹ️ Album folder '${ALBUM_FOLDER}' not found, returning empty array`);
         return [];
       }
     }
@@ -63,13 +70,24 @@ export async function uploadToAlbum(
   filename?: string,
   fileType?: string
 ): Promise<CloudinaryImage> {
+  const startTime = Date.now();
+  const isVideo = fileType?.startsWith('video/');
+  const mediaType = isVideo ? 'video' : 'image';
+  const fileSizeMB = (file.length / 1024 / 1024).toFixed(2);
+  
+  console.log(`[CLOUDINARY] 📤 Starting ${mediaType} upload: ${filename || 'unnamed'} (${fileSizeMB}MB)`);
+  
   try {
     // Determine the MIME type for the data URI
-    const isVideo = fileType?.startsWith('video/');
     const mimeType = fileType || (isVideo ? 'video/mp4' : 'image/jpeg');
-    const base64String = `data:${mimeType};base64,${file.toString('base64')}`;
+    console.log(`[CLOUDINARY] 🔄 Converting to base64 (MIME: ${mimeType})...`);
     
-    const result = await cloudinary.uploader.upload(base64String, {
+    const base64ConvertStart = Date.now();
+    const base64String = `data:${mimeType};base64,${file.toString('base64')}`;
+    const base64ConvertTime = Date.now() - base64ConvertStart;
+    console.log(`[CLOUDINARY] ✅ Base64 conversion completed in ${base64ConvertTime}ms`);
+    
+    const uploadOptions = {
       folder: ALBUM_FOLDER,
       public_id: filename ? filename.replace(/\.[^/.]+$/, '') : undefined, // Remove extension
       resource_type: 'auto',
@@ -81,7 +99,22 @@ export async function uploadToAlbum(
           { width: 400, height: 300, crop: 'pad', format: 'jpg' }, // Generate thumbnail
         ],
       }),
-    });
+    };
+    
+    console.log(`[CLOUDINARY] ☁️ Uploading to folder: ${ALBUM_FOLDER}${isVideo ? ' (with thumbnail generation)' : ''}`);
+    const cloudinaryUploadStart = Date.now();
+    const result = await cloudinary.uploader.upload(base64String, uploadOptions);
+    const cloudinaryUploadTime = Date.now() - cloudinaryUploadStart;
+
+    const totalTime = Date.now() - startTime;
+    const resultSizeMB = (result.bytes / 1024 / 1024).toFixed(2);
+    
+    console.log(`[CLOUDINARY] 🎉 Upload successful! (${cloudinaryUploadTime}ms Cloudinary, ${totalTime}ms total)`);
+    console.log(`[CLOUDINARY] 📋 Result: ${result.public_id}`);
+    console.log(`[CLOUDINARY] 📊 Details: ${result.width}x${result.height}, ${resultSizeMB}MB, ${result.format}`);
+    if (result.duration) {
+      console.log(`[CLOUDINARY] 🎬 Video duration: ${result.duration}s`);
+    }
 
     return {
       public_id: result.public_id,
@@ -96,8 +129,9 @@ export async function uploadToAlbum(
       duration: result.duration,
     };
   } catch (error) {
-    console.error('Error uploading to Cloudinary:', error);
-    throw new Error('Failed to upload image to Cloudinary');
+    const totalTime = Date.now() - startTime;
+    console.error(`[CLOUDINARY] 💥 Upload failed for ${filename || 'unnamed'} (${totalTime}ms):`, error);
+    throw new Error(`Failed to upload ${mediaType} to Cloudinary: ${error}`);
   }
 }
 
