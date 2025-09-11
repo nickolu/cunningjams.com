@@ -169,14 +169,13 @@ export function PhotoViewer({
           )}
 
           {/* Media Content */}
-          <div className="relative w-full h-full max-w-full max-h-full flex items-center justify-center p-4 sm:p-8">
+          <div className="relative w-full h-full p-4 sm:p-8">
             {photo.resource_type === 'video' ? (
               <video
                 src={photo.secure_url}
                 controls
                 className="w-full h-full object-contain"
                 preload="metadata"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
               >
                 Your browser does not support the video tag.
               </video>
@@ -184,11 +183,10 @@ export function PhotoViewer({
               <Image
                 src={photo.secure_url}
                 alt={photo.original_filename || 'Photo'}
-                width={photo.width}
-                height={photo.height}
-                className="w-full h-full object-contain"
+                fill
+                className="object-contain"
                 priority
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                sizes="100vw"
               />
             )}
           </div>

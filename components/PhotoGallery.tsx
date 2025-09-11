@@ -38,6 +38,8 @@ export function PhotoGallery() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
   const [isSettingCustom, setIsSettingCustom] = useState(false);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -94,10 +96,85 @@ export function PhotoGallery() {
     const { active, over } = event;
 
     if (active.id !== over?.id && isAdmin && sortBy === 'custom') {
-      const oldIndex = photos.findIndex(photo => photo.public_id === active.id);
-      const newIndex = photos.findIndex(photo => photo.public_id === over?.id);
+      const draggedPhotoId = active.id as string;
+      const overPhotoId = over?.id as string;
+      
+      // Get the photos to move (either just the dragged photo or all selected photos if it's in the selection)
+      const photosToMove = selectedPhotoIds.has(draggedPhotoId) && selectedPhotoIds.size > 0
+        ? Array.from(selectedPhotoIds)
+        : [draggedPhotoId];
+      
+      console.log('🔄 Drag operation:', {
+        draggedPhotoId,
+        overPhotoId,
+        selectedCount: selectedPhotoIds.size,
+        photosToMoveCount: photosToMove.length,
+        isGroupDrag: photosToMove.length > 1
+      });
+      
+      const oldIndex = photos.findIndex(photo => photo.public_id === draggedPhotoId);
+      const newIndex = photos.findIndex(photo => photo.public_id === overPhotoId);
 
-      const newPhotos = arrayMove(photos, oldIndex, newIndex);
+      let newPhotos = [...photos];
+
+      if (photosToMove.length === 1) {
+        // Single photo drag
+        newPhotos = arrayMove(photos, oldIndex, newIndex);
+      } else {
+        // Group drag - move all selected photos as a group
+        const selectedPhotos = photos.filter(photo => selectedPhotoIds.has(photo.public_id));
+        const unselectedPhotos = photos.filter(photo => !selectedPhotoIds.has(photo.public_id));
+        
+        // Find the target position in terms of unselected photos
+        const targetPhoto = photos[newIndex];
+        
+        console.log('📦 Group drag details:', {
+          selectedPhotoIds: Array.from(selectedPhotoIds),
+          selectedPhotos: selectedPhotos.map(p => p.public_id),
+          unselectedPhotos: unselectedPhotos.map(p => p.public_id),
+          targetPhoto: targetPhoto.public_id,
+          targetIsSelected: selectedPhotoIds.has(targetPhoto.public_id)
+        });
+        
+        if (selectedPhotoIds.has(targetPhoto.public_id)) {
+          // If dropping on a selected photo, don't move (or handle as needed)
+          console.log('🚫 Dropping on selected photo - keeping current order');
+          newPhotos = photos; // Keep current order
+        } else {
+          // Find where to insert among unselected photos
+          const targetIndexInUnselected = unselectedPhotos.findIndex(photo => photo.public_id === targetPhoto.public_id);
+          
+          // Determine if we're dragging forward or backward to decide insertion point
+          const draggedIndexInUnselected = unselectedPhotos.findIndex(photo => 
+            selectedPhotos.some(selected => selected.public_id === photo.public_id)
+          );
+          
+          // If we can't find the dragged photo in unselected (which is expected), 
+          // use the original position to determine direction
+          const originalDraggedIndex = photos.findIndex(photo => photo.public_id === draggedPhotoId);
+          const insertAfter = originalDraggedIndex < newIndex;
+          
+          const insertionIndex = insertAfter ? targetIndexInUnselected + 1 : targetIndexInUnselected;
+          
+          console.log('✅ Inserting group:', {
+            targetIndexInUnselected,
+            originalDraggedIndex,
+            newIndex,
+            insertAfter,
+            insertionIndex
+          });
+          
+          // Insert the selected group at the calculated position
+          newPhotos = [
+            ...unselectedPhotos.slice(0, insertionIndex),
+            ...selectedPhotos,
+            ...unselectedPhotos.slice(insertionIndex)
+          ];
+          
+          console.log('📋 New photo order:', newPhotos.map(p => p.public_id));
+        }
+      }
+
       setPhotos(newPhotos);
 
       // Update the order on the server
@@ -116,7 +193,8 @@ export function PhotoGallery() {
           throw new Error('Failed to update photo order');
         }
 
-        toast.success('Photo order updated successfully');
+        const photoCount = photosToMove.length;
+        toast.success(`${photoCount} photo${photoCount !== 1 ? 's' : ''} reordered successfully`);
       } catch (error) {
         console.error('Error updating photo order:', error);
         toast.error('Failed to update photo order');
@@ -129,8 +207,39 @@ export function PhotoGallery() {
   };
 
   const handlePhotoClick = (photo: CloudinaryImage, index: number) => {
-    setSelectedPhoto(photo);
-    setSelectedIndex(index);
+    if (isMultiSelectMode) {
+      togglePhotoSelection(photo.public_id);
+    } else {
+      setSelectedPhoto(photo);
+      setSelectedIndex(index);
+    }
+  };
+
+  const togglePhotoSelection = (photoId: string) => {
+    setSelectedPhotoIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(photoId)) {
+        newSet.delete(photoId);
+      } else {
+        newSet.add(photoId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllPhotos = () => {
+    setSelectedPhotoIds(new Set(photos.map(photo => photo.public_id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedPhotoIds(new Set());
+  };
+
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+    if (isMultiSelectMode) {
+      clearSelection();
+    }
   };
 
   const handleCloseViewer = () => {
@@ -253,6 +362,11 @@ export function PhotoGallery() {
           onThumbnailSizeChange={setThumbnailSize}
           isAdmin={isAdmin}
           onSetAsCustom={handleSetAsCustom}
+          isMultiSelectMode={isMultiSelectMode}
+          onToggleMultiSelect={toggleMultiSelectMode}
+          selectedCount={selectedPhotoIds.size}
+          onSelectAll={selectAllPhotos}
+          onClearSelection={clearSelection}
         />
 
         {/* Photo Grid */}
@@ -273,6 +387,8 @@ export function PhotoGallery() {
                   onClick={() => handlePhotoClick(photo, index)}
                   isAdmin={isAdmin}
                   isDragEnabled={sortBy === 'custom' && isAdmin}
+                  isMultiSelectMode={isMultiSelectMode}
+                  isSelected={selectedPhotoIds.has(photo.public_id)}
                 />
               ))}
             </div>
