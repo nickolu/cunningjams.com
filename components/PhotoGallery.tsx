@@ -37,6 +37,7 @@ export function PhotoGallery() {
   const [thumbnailSize, setThumbnailSize] = useState(4); // Default 4 per row
   const [isAdmin, setIsAdmin] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
+  const [isSettingCustom, setIsSettingCustom] = useState(false);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -58,8 +59,7 @@ export function PhotoGallery() {
       const data = await response.json();
       setPhotos(data.photos || []);
       
-      // Check if user is admin by looking for admin indicator in response headers
-      // We'll need to add this to the API response
+      // Check if user is admin
       checkAdminStatus();
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -154,6 +154,46 @@ export function PhotoGallery() {
     }
   };
 
+  const handleSetAsCustom = async () => {
+    setIsSettingCustom(true);
+    try {
+      const photoIds = photos.map(photo => photo.public_id);
+      const response = await fetch('/api/album/set-custom', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to set custom order');
+      }
+
+      // Get sort label for toast message
+      const sortLabels: Record<SortOption, string> = {
+        custom: 'Custom Order',
+        'upload-newest': 'Upload Date (Newest)',
+        'upload-oldest': 'Upload Date (Oldest)',
+        'name-asc': 'Name A-Z',
+        'name-desc': 'Name Z-A',
+        'created-newest': 'Created Date (Newest)',
+        'created-oldest': 'Created Date (Oldest)',
+      };
+      
+      toast.success(`Current "${sortLabels[sortBy]}" order saved as custom order`);
+      
+      // Switch to custom sort to show the new order
+      setSortBy('custom');
+      fetchPhotos('custom');
+    } catch (error) {
+      console.error('Error setting custom order:', error);
+      toast.error('Failed to set custom order');
+    } finally {
+      setIsSettingCustom(false);
+    }
+  };
+
   // Calculate grid classes based on thumbnail size
   const getGridClasses = () => {
     const gridClasses = {
@@ -212,6 +252,7 @@ export function PhotoGallery() {
           thumbnailSize={thumbnailSize}
           onThumbnailSizeChange={setThumbnailSize}
           isAdmin={isAdmin}
+          onSetAsCustom={handleSetAsCustom}
         />
 
         {/* Photo Grid */}

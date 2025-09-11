@@ -14,10 +14,12 @@ The photo album now includes comprehensive admin functionality that allows admin
 ### 2. Sort Options
 - **Multiple Sort Types**:
   - `Custom Order` (default) - Allows drag-and-drop reordering for admins
-  - `Newest First` - Sort by upload date (newest first)
-  - `Oldest First` - Sort by upload date (oldest first)
+  - `Created Date (Newest)` - Sort by creation date (newest first)
+  - `Created Date (Oldest)` - Sort by creation date (oldest first)
   - `Name A-Z` - Sort by filename alphabetically
   - `Name Z-A` - Sort by filename reverse alphabetically
+  - `Upload Date (Newest)` - Sort by upload date (newest first)
+  - `Upload Date (Oldest)` - Sort by upload date (oldest first)
 
 ### 3. Thumbnail Size Controls
 - **Dynamic Grid Sizing**: Adjust how many thumbnails appear per row
@@ -27,15 +29,16 @@ The photo album now includes comprehensive admin functionality that allows admin
 
 ### 4. Drag-and-Drop Reordering (Admin Only)
 - **Visual Feedback**: Drag handles appear on hover for admin users
-- **Custom Order Persistence**: Order is saved to Cloudinary using context metadata
+- **Context Metadata Storage**: Order is persisted using Cloudinary's context metadata
 - **Real-time Updates**: Changes are immediately saved and synchronized
 - **Disabled for Non-Admins**: Regular users cannot reorder photos
+- **Only in Custom Order Sort**: Drag-and-drop only works when this sort option is selected
 
-### 5. Custom Order Storage
-- **Cloudinary Context Metadata**: Uses Cloudinary's built-in context feature to store custom ordering
+### 5. Context-Based Order Storage
+- **Sort Order Context**: Uses context metadata with padded numbers (001, 002, 003)
 - **No External Database Required**: Perfect for Vercel deployment
 - **Persistent**: Order survives app restarts and deployments
-- **Efficient**: Minimal API calls for updates
+- **Reliable**: Built into Cloudinary's metadata system
 
 ## Environment Variables
 
@@ -62,11 +65,11 @@ ADMIN_PASSWORD=your_admin_password_here
 2. JWT token is created with appropriate permissions (`isAdmin: true/false`)
 3. Frontend checks admin status on load and shows/hides admin features accordingly
 
-### Custom Ordering System
-1. **Storage**: Each photo can have a `custom_order` value stored in Cloudinary context metadata
-2. **Sorting**: When "Custom Order" is selected, photos are sorted by this value
-3. **Fallback**: Photos without custom order fall back to creation date sorting
-4. **Updates**: Drag-and-drop updates all affected photos' order values via batch API call
+### Context-Based Ordering System
+1. **Storage**: Photos have context metadata with sort_order values like "001", "002", "003"
+2. **Sorting**: When "Custom Order" is selected, photos are sorted by sort_order context, then by creation date
+3. **Persistence**: Context metadata ensures consistent sorting across sessions
+4. **Updates**: Drag-and-drop updates all affected photos' context metadata via batch API call
 
 ### Drag-and-Drop Implementation
 - **Library**: Uses `@dnd-kit` for smooth, accessible drag-and-drop
@@ -146,7 +149,7 @@ Enhanced to accept sort parameter for different ordering options.
 3. Use sort controls to change photo ordering
 4. Select "Custom Order" to enable drag-and-drop
 5. Drag photos to reorder them
-6. Changes are saved automatically
+6. Changes are saved automatically by updating context metadata
 
 ### For Regular Users
 1. Log in with regular album password

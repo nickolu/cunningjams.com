@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ArrowUpDown, Grid3X3, Grid2X2 } from 'lucide-react';
+import { ArrowUpDown, Grid3X3, Grid2X2, Save } from 'lucide-react';
 import { SortOption } from '@/lib/cloudinary';
 
 interface SortControlsProps {
@@ -19,14 +19,17 @@ interface SortControlsProps {
   thumbnailSize: number;
   onThumbnailSizeChange: (size: number) => void;
   isAdmin?: boolean;
+  onSetAsCustom?: () => void;
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'custom', label: 'Custom Order' },
-  { value: 'newest', label: 'Newest First' },
-  { value: 'oldest', label: 'Oldest First' },
+  { value: 'upload-newest', label: 'Upload Date (Newest)' },
+  { value: 'upload-oldest', label: 'Upload Date (Oldest)' },
   { value: 'name-asc', label: 'Name A-Z' },
   { value: 'name-desc', label: 'Name Z-A' },
+  { value: 'created-newest', label: 'Created Date (Newest)' },
+  { value: 'created-oldest', label: 'Created Date (Oldest)' },
 ];
 
 export function SortControls({ 
@@ -34,9 +37,21 @@ export function SortControls({
   onSortChange, 
   thumbnailSize, 
   onThumbnailSizeChange,
-  isAdmin 
+  isAdmin,
+  onSetAsCustom
 }: SortControlsProps) {
-  const [showControls, setShowControls] = useState(false);
+  const [isSettingCustom, setIsSettingCustom] = useState(false);
+
+  const handleSetAsCustom = async () => {
+    if (!onSetAsCustom) return;
+    
+    setIsSettingCustom(true);
+    try {
+      await onSetAsCustom();
+    } finally {
+      setIsSettingCustom(false);
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
@@ -57,6 +72,20 @@ export function SortControls({
             ))}
           </SelectContent>
         </Select>
+        
+        {/* Set as Custom Button (Admin Only) */}
+        {isAdmin && sortBy !== 'custom' && onSetAsCustom && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSetAsCustom}
+            disabled={isSettingCustom}
+            className="flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            {isSettingCustom ? 'Setting...' : 'Set as Custom'}
+          </Button>
+        )}
       </div>
 
       {/* Thumbnail Size Controls */}

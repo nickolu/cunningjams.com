@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { isAdmin } from '@/lib/auth';
-import { updateCustomOrder } from '@/lib/cloudinary';
+import { updatePhotoOrder } from '@/lib/cloudinary';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -34,14 +34,14 @@ export async function POST(request: NextRequest) {
 
     // Create order updates
     const orderUpdates = photoIds.map((publicId: string, index: number) => ({
-      publicId,
-      order: index,
+      currentPublicId: publicId,
+      newOrder: index,
     }));
 
-    // Update custom order in Cloudinary
-    console.log(`[REORDER-${requestId}] 🔍 Updating custom order for ${orderUpdates.length} photos...`);
+    // Update photo order by renaming public IDs
+    console.log(`[REORDER-${requestId}] 🔍 Updating photo order for ${orderUpdates.length} photos...`);
     const updateStartTime = Date.now();
-    const success = await updateCustomOrder(orderUpdates);
+    const success = await updatePhotoOrder(orderUpdates);
     const updateTime = Date.now() - updateStartTime;
 
     if (!success) {
