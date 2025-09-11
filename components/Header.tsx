@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,6 +21,7 @@ interface HeaderProps {
 
 export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
   const router = useRouter();
+  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -78,22 +80,10 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1">
-                  <DirectUploadModal onUploadComplete={onRefreshGallery}>
-                    {({ open, isUploading }) => (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={open}
-                        disabled={isUploading}
-                        className="w-full justify-start"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Photos
-                      </Button>
-                    )}
-                  </DirectUploadModal>
-                </div>
+                <DropdownMenuItem onClick={() => setMobileUploadModalOpen(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Photos
+                </DropdownMenuItem>
                 <div className="px-2 py-1">
                   <DownloadButton photos={photos} variant="ghost" size="sm" className="w-full justify-start" />
                 </div>
@@ -106,6 +96,22 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
           </div>
         </div>
       </header>
+      
+      {/* Mobile Upload Modal - Outside of dropdown to prevent closing issues */}
+      {mobileUploadModalOpen && (
+        <DirectUploadModal onUploadComplete={() => {
+          onRefreshGallery?.();
+          setMobileUploadModalOpen(false);
+        }}>
+          {({ open, isUploading }) => {
+            // Auto-open when modal becomes active
+            if (mobileUploadModalOpen && !isUploading) {
+              setTimeout(open, 0);
+            }
+            return null; // No UI needed since we auto-open
+          }}
+        </DirectUploadModal>
+      )}
     </>
   );
 }

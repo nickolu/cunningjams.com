@@ -47,7 +47,7 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
         resourceType: 'auto',
         clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'],
         maxFileSize: 100000000, // 100MB
-        sources: ['local', 'camera'],
+        sources: ['local', 'google_drive'],
         showAdvancedOptions: false,
         cropping: false,
         showSkipCropButton: false,
