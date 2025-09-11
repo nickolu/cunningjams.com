@@ -82,7 +82,20 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
         onUploadComplete?.();
       }}
     >
-      {({ open }) => children({ open, isUploading })}
+      {({ open }) => {
+        const safeOpen = () => {
+          try {
+            console.log('📤 Opening Cloudinary widget...');
+            open();
+          } catch (error) {
+            console.error('❌ Error opening Cloudinary widget:', error);
+            setIsUploading(false);
+            toast.error('Failed to open upload widget. Please try again.');
+          }
+        };
+        
+        return children({ open: safeOpen, isUploading });
+      }}
     </CldUploadWidget>
   );
 }

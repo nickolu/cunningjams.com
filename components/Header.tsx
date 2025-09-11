@@ -78,14 +78,22 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DirectUploadModal onUploadComplete={onRefreshGallery}>
-                  {({ open, isUploading }) => (
-                    <DropdownMenuItem onClick={open} disabled={isUploading}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Photos
-                    </DropdownMenuItem>
-                  )}
-                </DirectUploadModal>
+                <div className="px-2 py-1">
+                  <DirectUploadModal onUploadComplete={onRefreshGallery}>
+                    {({ open, isUploading }) => (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={open}
+                        disabled={isUploading}
+                        className="w-full justify-start"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photos
+                      </Button>
+                    )}
+                  </DirectUploadModal>
+                </div>
                 <div className="px-2 py-1">
                   <DownloadButton photos={photos} variant="ghost" size="sm" className="w-full justify-start" />
                 </div>
