@@ -1,7 +1,8 @@
 import { CloudinaryImage, getOptimizedImageUrl } from '@/lib/cloudinary-client';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import { Play, Clock } from 'lucide-react';
+import { Play, Clock, Video } from 'lucide-react';
+import { useState } from 'react';
 
 interface PhotoCardProps {
   photo: CloudinaryImage;
@@ -17,11 +18,18 @@ function formatDuration(seconds?: number): string {
 
 export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   const isVideo = photo.resource_type === 'video';
+  const [thumbnailError, setThumbnailError] = useState(false);
   
   // For videos, use Cloudinary's auto-generated thumbnail
   const thumbnailUrl = isVideo 
     ? getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'jpg' })
     : photo.secure_url;
+
+  const handleThumbnailError = () => {
+    if (isVideo) {
+      setThumbnailError(true);
+    }
+  };
 
   return (
     <Card 
@@ -29,13 +37,24 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
       onClick={onClick}
     >
       <div className="aspect-square relative">
-        <Image
-          src={thumbnailUrl}
-          alt={photo.original_filename || (isVideo ? 'Video' : 'Photo')}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-200"
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-        />
+        {isVideo && thumbnailError ? (
+          // Video placeholder when thumbnail fails to load
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+            <div className="text-center">
+              <Video className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-2" />
+              <p className="text-xs text-gray-500 dark:text-gray-400">Video</p>
+            </div>
+          </div>
+        ) : (
+          <Image
+            src={thumbnailUrl}
+            alt={photo.original_filename || (isVideo ? 'Video' : 'Photo')}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-200"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+            onError={handleThumbnailError}
+          />
+        )}
         
         {/* Video overlay */}
         {isVideo && (
