@@ -1,0 +1,260 @@
+import { useState, useRef, useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Upload, X, FileImage, AlertCircle, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface UploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUploadComplete?: () => void;
+}
+
+interface FileUploadStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
+  error?: string;
+}
+
+export function UploadModal({ isOpen, onClose, onUploadComplete }: UploadModalProps) {
+  const [files, setFiles] = useState<FileUploadStatus[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    addFiles(droppedFiles);
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    addFiles(selectedFiles);
+  };
+
+  const addFiles = (newFiles: File[]) => {
+    const imageFiles = newFiles.filter(file => file.type.startsWith('image/'));
+    const fileStatuses: FileUploadStatus[] = imageFiles.map(file => ({
+      file,
+      status: 'pending',
+      progress: 0,
+    }));
+    
+    setFiles(prev => [...prev, ...fileStatuses]);
+    
+    // Show warning for non-image files
+    const nonImageFiles = newFiles.filter(file => !file.type.startsWith('image/'));
+    if (nonImageFiles.length > 0) {
+      toast.warning(`${nonImageFiles.length} non-image files were ignored`);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAll = () => {
+    setFiles([]);
+  };
+
+  const uploadFiles = async () => {
+    if (files.length === 0) return;
+    
+    setIsUploading(true);
+    
+    try {
+      const formData = new FormData();
+      files.forEach(({ file }) => {
+        formData.append('files', file);
+      });
+
+      // Update all files to uploading status
+      setFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const, progress: 0 })));
+
+      const response = await fetch('/api/album/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Update file statuses based on results
+        setFiles(prev => prev.map(fileStatus => {
+          const uploadResult = result.uploaded.find((r: any) => r.filename === fileStatus.file.name);
+          const error = result.errors.find((e: string) => e.startsWith(fileStatus.file.name));
+          
+          if (uploadResult) {
+            return { ...fileStatus, status: 'success' as const, progress: 100 };
+          } else if (error) {
+            return { ...fileStatus, status: 'error' as const, progress: 0, error };
+          } else {
+            return { ...fileStatus, status: 'error' as const, progress: 0, error: 'Unknown error' };
+          }
+        }));
+
+        // Show success message
+        if (result.successful > 0) {
+          toast.success(`Successfully uploaded ${result.successful} photo${result.successful !== 1 ? 's' : ''}`);
+        }
+        
+        if (result.failed > 0) {
+          toast.error(`Failed to upload ${result.failed} photo${result.failed !== 1 ? 's' : ''}`);
+        }
+
+        // Close modal and refresh gallery after a short delay
+        setTimeout(() => {
+          onUploadComplete?.();
+          onClose();
+          setFiles([]);
+        }, 2000);
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Upload failed. Please try again.');
+      
+      // Mark all files as error
+      setFiles(prev => prev.map(f => ({ ...f, status: 'error' as const, progress: 0, error: 'Upload failed' })));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!isUploading) {
+      onClose();
+      setFiles([]);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Upload Photos</DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Drop Zone */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              isDragOver 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/25 hover:border-muted-foreground/40'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg font-medium mb-2">
+              Drop photos here or click to browse
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Supports JPEG, PNG, WebP files up to 10MB each
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              Browse Files
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
+
+          {/* File List */}
+          {files.length > 0 && (
+            <div className="mt-6 flex-1 overflow-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium">
+                  {files.length} file{files.length !== 1 ? 's' : ''} selected
+                </h4>
+                {!isUploading && (
+                  <Button variant="ghost" size="sm" onClick={clearAll}>
+                    Clear All
+                  </Button>
+                )}
+              </div>
+              
+              <div className="space-y-2 max-h-60 overflow-auto">
+                {files.map((fileStatus, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg">
+                    <FileImage className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{fileStatus.file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(fileStatus.file.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                      {fileStatus.status === 'uploading' && (
+                        <Progress value={fileStatus.progress} className="h-1 mt-1" />
+                      )}
+                      {fileStatus.error && (
+                        <p className="text-xs text-destructive mt-1">{fileStatus.error}</p>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0">
+                      {fileStatus.status === 'success' && (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      )}
+                      {fileStatus.status === 'error' && (
+                        <AlertCircle className="w-5 h-5 text-destructive" />
+                      )}
+                      {fileStatus.status === 'pending' && !isUploading && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end space-x-2 pt-4 border-t">
+          <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+            {isUploading ? 'Uploading...' : 'Cancel'}
+          </Button>
+          <Button 
+            onClick={uploadFiles} 
+            disabled={files.length === 0 || isUploading}
+          >
+            Upload {files.length > 0 ? `${files.length} Photo${files.length !== 1 ? 's' : ''}` : ''}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
