@@ -22,8 +22,8 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   
   // For videos, use Cloudinary's auto-generated thumbnail
   const thumbnailUrl = isVideo 
-    ? getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'jpg' })
-    : photo.secure_url;
+    ? getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'jpg', quality: 'auto', crop: 'fill' })
+    : getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'auto', quality: 'auto', crop: 'fill' });
 
   const handleThumbnailError = () => {
     if (isVideo) {
@@ -53,6 +53,7 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-200"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
             onError={handleThumbnailError}
+            loading="lazy"
           />
         )}
         
