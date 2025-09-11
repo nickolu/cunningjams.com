@@ -92,3 +92,16 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Fix Cloudinary upload widget z-index conflicts */
+.cloudinary-widget-overlay,
+.cloudinary-widget-modal,
+.cloudinary-widget {
+  z-index: 60 !important;
+}
+
+/* Ensure Cloudinary upload widget appears above modals */
+#cloudinary-overlay,
+[id*="cloudinary"] {
+  z-index: 60 !important;
+}

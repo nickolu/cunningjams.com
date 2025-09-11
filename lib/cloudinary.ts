@@ -1,4 +1,5 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
+import { CloudinaryImage } from './cloudinary-client';
 
 // Ensure this only runs on the server
 if (typeof window === 'undefined') {
@@ -70,7 +71,7 @@ export async function uploadToAlbum(
     const mimeType = fileType || (isVideo ? 'video/mp4' : 'image/jpeg');
     const base64String = `data:${mimeType};base64,${file.toString('base64')}`;
     
-    const uploadOptions = {
+    const uploadOptions: UploadApiOptions = {
       folder: ALBUM_FOLDER,
       public_id: filename ? filename.replace(/\.[^/.]+$/, '') : undefined, // Remove extension
       resource_type: 'auto',
@@ -95,7 +96,7 @@ export async function uploadToAlbum(
       created_at: result.created_at,
       bytes: result.bytes,
       original_filename: result.original_filename,
-      resource_type: result.resource_type,
+      resource_type: result.resource_type as 'image' | 'video',
       duration: result.duration,
     };
   } catch (error) {

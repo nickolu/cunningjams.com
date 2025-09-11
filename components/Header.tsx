@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,7 +9,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Upload, Menu, LogOut } from 'lucide-react';
-import { UploadModal } from '@/components/UploadModal';
+import { DirectUploadModal } from '@/components/DirectUploadModal';
 import { DownloadButton } from '@/components/DownloadButton';
 import { CloudinaryImage } from '@/lib/cloudinary-client';
 
@@ -20,7 +19,6 @@ interface HeaderProps {
 }
 
 export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
-  const [showUploadModal, setShowUploadModal] = useState(false);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -43,15 +41,20 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowUploadModal(true)}
-              className="flex items-center space-x-2"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Upload Photos</span>
-            </Button>
+            <DirectUploadModal onUploadComplete={onRefreshGallery}>
+              {({ open, isUploading }) => (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={open}
+                  disabled={isUploading}
+                  className="flex items-center space-x-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Upload Photos</span>
+                </Button>
+              )}
+            </DirectUploadModal>
             
             <DownloadButton photos={photos} />
 
@@ -75,10 +78,14 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setShowUploadModal(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Photos
-                </DropdownMenuItem>
+                <DirectUploadModal onUploadComplete={onRefreshGallery}>
+                  {({ open, isUploading }) => (
+                    <DropdownMenuItem onClick={open} disabled={isUploading}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Photos
+                    </DropdownMenuItem>
+                  )}
+                </DirectUploadModal>
                 <div className="px-2 py-1">
                   <DownloadButton photos={photos} variant="ghost" size="sm" className="w-full justify-start" />
                 </div>
@@ -91,12 +98,6 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
           </div>
         </div>
       </header>
-
-      <UploadModal
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        onUploadComplete={onRefreshGallery}
-      />
     </>
   );
 }

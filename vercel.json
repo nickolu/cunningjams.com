@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "app/api/album/photos/route.ts": {
+      "maxDuration": 15
+    }
+  },
+  "regions": ["iad1"]
+}

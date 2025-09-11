@@ -10,6 +10,7 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=album-upload
 
 # Album Authentication
 ALBUM_PASSWORD=colorado2025
@@ -30,10 +31,15 @@ NEXTAUTH_SECRET=your_session_secret_key_here
    - Generate a secure random string for `NEXTAUTH_SECRET`
    - Change `ALBUM_PASSWORD` to your desired password
 
-3. **Create the Cloudinary folder**:
+3. **Configure Cloudinary Upload Preset**:
    - Log into your Cloudinary dashboard
-   - Create a folder named `2025-steves-40th`
-   - Upload a test image to verify the setup
+   - Go to Settings → Upload → Add upload preset
+   - Set preset name to `album-upload` (or update the env var to match)
+   - Set mode to "Unsigned"
+   - Set folder to `2025-steves-40th`
+   - Configure allowed formats: jpg, jpeg, png, gif, webp, mp4, mov, avi, webm
+   - Set max file size to 100MB
+   - Save the preset
 
 4. **Run the development server**:
    ```bash
