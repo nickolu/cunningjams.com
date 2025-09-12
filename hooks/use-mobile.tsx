@@ -3,22 +3,28 @@
 import { useEffect, useState } from "react"
 
 export function useMobile() {
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
 
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
     }
 
     // Initial check
     checkIfMobile()
 
-    // Add event listener
-    window.addEventListener("resize", checkIfMobile)
+    // Add event listener with passive option for better performance
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const handleChange = () => setIsMobile(mediaQuery.matches)
+    
+    mediaQuery.addEventListener('change', handleChange)
+    handleChange() // Set initial value
 
     // Clean up
-    return () => window.removeEventListener("resize", checkIfMobile)
+    return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
-  return isMobile
+  // Return false during SSR to avoid hydration mismatch
+  return isMobile ?? false
 }

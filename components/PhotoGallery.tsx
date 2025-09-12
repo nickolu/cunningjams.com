@@ -363,14 +363,15 @@ export function PhotoGallery() {
     }
   };
 
-  // Calculate grid classes based on thumbnail size
+  // Calculate grid classes based on thumbnail size - direct mapping without minimum constraints
   const getGridClasses = () => {
     const gridClasses = {
+      1: 'grid-cols-1',
       2: 'grid-cols-2',
-      3: 'grid-cols-2 md:grid-cols-3',
-      4: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
-      5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-      6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+      5: 'grid-cols-5',
+      6: 'grid-cols-6',
     };
     return gridClasses[thumbnailSize as keyof typeof gridClasses] || gridClasses[4];
   };
