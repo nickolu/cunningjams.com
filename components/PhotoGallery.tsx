@@ -604,7 +604,32 @@ export function PhotoGallery() {
 
   return (
     <div>
-      <Header photos={photos} onRefreshGallery={fetchPhotos} />
+      <Header
+        photos={photos}
+        onRefreshGallery={fetchPhotos}
+        inlineContent={
+          <SortControls
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            thumbnailSize={thumbnailSize}
+            onThumbnailSizeChange={setThumbnailSize}
+            isAdmin={isAdmin}
+            onSetAsCustom={handleSetAsCustom}
+            isMultiSelectMode={isMultiSelectMode}
+            onToggleMultiSelect={toggleMultiSelectMode}
+            selectedCount={selectedPhotoIds.size}
+            onSelectAll={selectAllPhotos}
+            onClearSelection={clearSelection}
+            onDeleteSelected={handleDeleteSelected}
+            onReverseOrder={handleReverseOrder}
+            isProcessingOrder={isProcessingOrder}
+            isSavingOrder={isSavingOrder}
+            unsavedChanges={unsavedChanges}
+            variant="compact"
+            showMultiSelectBar={false}
+          />
+        }
+      />
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
@@ -619,7 +644,7 @@ export function PhotoGallery() {
           </p>
         </div>
 
-        {/* Sort and Size Controls */}
+        {/* Multi-Select Controls below header to reduce header height */}
         <SortControls
           sortBy={sortBy}
           onSortChange={handleSortChange}
@@ -637,6 +662,8 @@ export function PhotoGallery() {
           isProcessingOrder={isProcessingOrder}
           isSavingOrder={isSavingOrder}
           unsavedChanges={unsavedChanges}
+          showMainControls={false}
+          showMultiSelectBar={true}
         />
 
         {/* Photo Grid */}

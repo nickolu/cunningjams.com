@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,9 +17,11 @@ import { CloudinaryImage } from '@/lib/cloudinary-client';
 interface HeaderProps {
   photos?: CloudinaryImage[];
   onRefreshGallery?: () => void;
+  secondaryContent?: ReactNode;
+  inlineContent?: ReactNode;
 }
 
-export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
+export function Header({ photos = [], onRefreshGallery, secondaryContent, inlineContent }: HeaderProps) {
   const router = useRouter();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
 
@@ -36,13 +38,18 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-16 flex items-center gap-3">
           <div className="flex items-center space-x-2">
             <h2 className="text-lg font-semibold">Photo Album</h2>
           </div>
+          {inlineContent && (
+            <div className="hidden md:flex flex-1 items-center justify-center min-w-0">
+              {inlineContent}
+            </div>
+          )}
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-2 ml-auto">
             <DirectUploadModal onUploadComplete={onRefreshGallery}>
               {({ open, isUploading }) => (
                 <Button
@@ -72,7 +79,7 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -95,6 +102,14 @@ export function Header({ photos = [], onRefreshGallery }: HeaderProps) {
             </DropdownMenu>
           </div>
         </div>
+
+        {secondaryContent && (
+          <div className="w-full border-t">
+            <div className="container mx-auto px-4 py-3">
+              {secondaryContent}
+            </div>
+          </div>
+        )}
       </header>
       
       {/* Mobile Upload Modal - Outside of dropdown to prevent closing issues */}
