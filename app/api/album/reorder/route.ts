@@ -23,20 +23,27 @@ export async function POST(request: NextRequest) {
     console.log(`[REORDER-${requestId}] ✅ Admin authentication successful`);
 
     // Get the new order from request body
-    const { photoIds } = await request.json();
-    
-    if (!Array.isArray(photoIds)) {
+    const body = await request.json();
+    const { photoIds, updates } = body || {};
+
+    if (!Array.isArray(photoIds) && !Array.isArray(updates)) {
       return Response.json(
-        { error: 'photoIds must be an array' },
+        { error: 'Provide either photoIds (array) or updates (array)' },
         { status: 400 }
       );
     }
 
-    // Create order updates
-    const orderUpdates = photoIds.map((publicId: string, index: number) => ({
-      currentPublicId: publicId,
-      newOrder: index,
-    }));
+    // Create order updates from either full array or partial updates
+    const orderUpdates = Array.isArray(updates)
+      ? updates.map((u: any) => ({
+          currentPublicId: u.publicId ?? u.currentPublicId,
+          newOrder: typeof u.newIndex === 'number' ? u.newIndex : u.newOrder,
+          newSortKey: u.newSortKey,
+        })).filter((u: any) => !!u.currentPublicId && (typeof u.newOrder === 'number' || typeof u.newSortKey === 'string'))
+      : (photoIds as string[]).map((publicId: string, index: number) => ({
+          currentPublicId: publicId,
+          newOrder: index,
+        }));
 
     // Update photo order by renaming public IDs
     console.log(`[REORDER-${requestId}] 🔍 Updating photo order for ${orderUpdates.length} photos...`);

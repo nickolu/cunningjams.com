@@ -189,10 +189,19 @@ export async function setCurrentOrderAsCustom(photoIds: string[]): Promise<boole
   }
 }
 
-export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder: number }[]): Promise<boolean> {
+// Default sort key config (padded numeric strings for lexicographic sort)
+const SORT_KEY_WIDTH = 9; // zero-pad to 9 digits
+const SORT_KEY_STEP = 1000; // default spacing between consecutive items
+
+function toPaddedSortKeyFromIndex(index: number): string {
+  const numericValue = index * SORT_KEY_STEP;
+  return String(numericValue).padStart(SORT_KEY_WIDTH, '0');
+}
+
+export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder?: number; newSortKey?: string }[]): Promise<boolean> {
   try {
     console.log(`🔄 Starting photo order update for ${orderUpdates.length} photos`);
-    console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder })));
+    console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder, key: u.newSortKey })));
     
     // Check Cloudinary configuration
     const config = cloudinary.config();
@@ -202,7 +211,7 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
       api_secret: !!config.api_secret
     });
     
-    // Use context metadata with padded order numbers for proper sorting
+    // Use context metadata with padded order keys for proper lexicographic sorting
     // Process in batches to avoid rate limiting
     const BATCH_SIZE = 5;
     const results: Array<{ success: boolean; publicId: string; result?: any; error?: string }> = [];
@@ -211,11 +220,11 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
       const batch = orderUpdates.slice(i, i + BATCH_SIZE);
       console.log(`🔄 Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderUpdates.length / BATCH_SIZE)} (${batch.length} items)`);
       
-      const batchPromises = batch.map(async ({ currentPublicId, newOrder }, batchIndex) => {
+      const batchPromises = batch.map(async ({ currentPublicId, newOrder, newSortKey }, batchIndex) => {
         const globalIndex = i + batchIndex;
         try {
-          // Use padded numbers for proper sorting: 001, 002, 003, etc.
-          const paddedOrder = String(newOrder).padStart(3, '0');
+          // Prefer provided sort key, else derive from index using default spacing
+          const paddedOrder = newSortKey ?? toPaddedSortKeyFromIndex(newOrder ?? 0);
           
           console.log(`📝 [${globalIndex + 1}/${orderUpdates.length}] Setting context sort_order=${paddedOrder} for ${currentPublicId}`);
           

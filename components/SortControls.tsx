@@ -28,6 +28,9 @@ interface SortControlsProps {
   onClearSelection?: () => void;
   onDeleteSelected?: (event: React.MouseEvent) => void;
   onReverseOrder?: () => void;
+  isProcessingOrder?: boolean;
+  isSavingOrder?: boolean;
+  unsavedChanges?: boolean;
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -53,7 +56,10 @@ export function SortControls({
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  onReverseOrder
+  onReverseOrder,
+  isProcessingOrder = false,
+  isSavingOrder = false,
+  unsavedChanges = false
 }: SortControlsProps) {
   const [isSettingCustom, setIsSettingCustom] = useState(false);
   const isMobile = useMobile();
@@ -93,7 +99,7 @@ export function SortControls({
             variant="outline"
             size="sm"
             onClick={handleDecrease}
-            disabled={thumbnailSize <= 1}
+            disabled={thumbnailSize <= 1 || isProcessingOrder}
             className="h-10 w-10 p-0 touch-manipulation"
           >
             <Minus className="w-4 h-4" />
@@ -107,7 +113,7 @@ export function SortControls({
             variant="outline"
             size="sm"
             onClick={handleIncrease}
-            disabled={thumbnailSize >= 6}
+            disabled={thumbnailSize >= 6 || isProcessingOrder}
             className="h-10 w-10 p-0 touch-manipulation"
           >
             <Plus className="w-4 h-4" />
@@ -133,6 +139,7 @@ export function SortControls({
           max={6}
           min={1}
           step={1}
+          disabled={isProcessingOrder}
           className="flex-1"
         />
         <Grid3X3 className="w-4 h-4 text-muted-foreground" />
@@ -151,8 +158,8 @@ export function SortControls({
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Sort:</span>
-            <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className={`${isMobile ? 'flex-1' : 'w-[180px]'}`}>
+            <Select value={sortBy} onValueChange={onSortChange} disabled={isProcessingOrder}>
+              <SelectTrigger className={`${isMobile ? 'flex-1' : 'w-[180px]'} ${isProcessingOrder ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -175,7 +182,7 @@ export function SortControls({
                   variant="outline"
                   size={isMobile ? "default" : "sm"}
                   onClick={handleSetAsCustom}
-                  disabled={isSettingCustom}
+                  disabled={isSettingCustom || isProcessingOrder}
                   className="flex items-center gap-2 flex-1 sm:flex-none"
                 >
                   <Save className="w-4 h-4" />
@@ -189,6 +196,7 @@ export function SortControls({
                   variant={isMultiSelectMode ? "default" : "outline"}
                   size={isMobile ? "default" : "sm"}
                   onClick={onToggleMultiSelect}
+                  disabled={isProcessingOrder}
                   className="flex items-center gap-2 flex-1 sm:flex-none"
                 >
                   <MousePointer className="w-4 h-4" />
@@ -198,11 +206,19 @@ export function SortControls({
             </div>
           )}
 
-          {/* Admin indicator */}
+          {/* Admin/Saving indicator */}
           {isAdmin && (
-            <div className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full ml-auto">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-              Admin
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                Admin
+              </div>
+              {unsavedChanges && (
+                <div className={`flex items-center gap-1 text-xs ${isSavingOrder ? 'text-amber-700 bg-amber-50' : 'text-emerald-700 bg-emerald-50'} px-2 py-1 rounded-full`}>
+                  <div className={`w-2 h-2 rounded-full ${isSavingOrder ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                  {isSavingOrder ? 'Saving…' : 'Saved'}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -227,6 +243,7 @@ export function SortControls({
                 variant="outline"
                 size="sm"
                 onClick={onSelectAll}
+                disabled={isProcessingOrder}
                 className="flex items-center gap-2"
               >
                 <CheckSquare className="w-4 h-4" />
@@ -239,6 +256,7 @@ export function SortControls({
                 variant="outline"
                 size="sm"
                 onClick={onClearSelection}
+                disabled={isProcessingOrder}
                 className="flex items-center gap-2"
               >
                 <Square className="w-4 h-4" />
@@ -251,10 +269,11 @@ export function SortControls({
                 variant="outline"
                 size="sm"
                 onClick={onReverseOrder}
+                disabled={isProcessingOrder}
                 className="flex items-center gap-2"
               >
                 <ReverseIcon className="w-4 h-4" />
-                Reverse Order
+                {isProcessingOrder ? 'Processing...' : 'Reverse Order'}
               </Button>
             )}
 
@@ -263,6 +282,7 @@ export function SortControls({
                 variant="destructive"
                 size="sm"
                 onClick={onDeleteSelected}
+                disabled={isProcessingOrder}
                 className="flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />

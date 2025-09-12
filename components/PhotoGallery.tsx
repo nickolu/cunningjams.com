@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PhotoCard } from '@/components/PhotoCard';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { LoadingGallery } from '@/components/LoadingGallery';
@@ -37,7 +37,13 @@ export function PhotoGallery() {
   const [sortBy, setSortBy] = useState<SortOption>('custom');
   const [thumbnailSize, setThumbnailSize] = useState(4); // Default 4 per row
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isReordering, setIsReordering] = useState(false);
+  // Reorder/save state
+  const [isReordering, setIsReordering] = useState(false); // kept for legacy destructive ops
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const saveAbortController = useRef<AbortController | null>(null);
+  const saveTimeoutId = useRef<number | undefined>(undefined);
+  const lastUpdatesRef = useRef<{ currentPublicId: string; newSortKey: string }[] | null>(null);
   const [isSettingCustom, setIsSettingCustom] = useState(false);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
@@ -45,9 +51,135 @@ export function PhotoGallery() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Combined loading state for blocking operations (do not block on background saves)
+  const isProcessingOrder = isSettingCustom || isDeleting;
+
+  // Helpers for sort keys (lexicographic numeric strings)
+  const SORT_KEY_WIDTH = 9;
+  const MIN_KEY = 0;
+  const MAX_KEY = Math.pow(10, SORT_KEY_WIDTH) - 1;
+  const formatKey = (n: number) => String(Math.max(MIN_KEY, Math.min(MAX_KEY, Math.floor(n)))).padStart(SORT_KEY_WIDTH, '0');
+  const parseKey = (s?: string | null) => {
+    if (!s) return undefined;
+    const n = parseInt(s, 10);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  // Compute minimal contiguous region that changed between two arrays
+  const computeChangedRegion = (oldArr: CloudinaryImage[], newArr: CloudinaryImage[]) => {
+    const len = Math.min(oldArr.length, newArr.length);
+    let start = 0;
+    while (start < len && oldArr[start]?.public_id === newArr[start]?.public_id) start++;
+    if (start === len) return null;
+    let end = len - 1;
+    while (end >= start && oldArr[end]?.public_id === newArr[end]?.public_id) end--;
+    return { start, end };
+  };
+
+  // Given a region [start,end] in newPhotos, generate evenly spaced keys between neighbors
+  const computeRegionUpdates = (newPhotosArray: CloudinaryImage[], start: number, end: number) => {
+    const leftNeighbor = start - 1 >= 0 ? newPhotosArray[start - 1] : undefined;
+    const rightNeighbor = end + 1 < newPhotosArray.length ? newPhotosArray[end + 1] : undefined;
+
+    const leftKey = parseKey(leftNeighbor?.sort_order) ?? MIN_KEY;
+    const rightKey = parseKey(rightNeighbor?.sort_order) ?? MAX_KEY;
+
+    const regionSize = end - start + 1;
+    const interval = (rightKey - leftKey) / (regionSize + 1);
+
+    // If interval is too small or invalid, fall back to rebalancing entire list
+    if (!Number.isFinite(interval) || interval < 1) {
+      const step = Math.floor(MAX_KEY / (newPhotosArray.length + 1));
+      const updates = newPhotosArray.map((p, idx) => ({
+        currentPublicId: p.public_id,
+        newSortKey: formatKey((idx + 1) * step),
+      }));
+      return { updates, rebalanced: true } as const;
+    }
+
+    const updates = [] as { currentPublicId: string; newSortKey: string }[];
+    for (let i = 0; i < regionSize; i++) {
+      const keyNum = leftKey + (i + 1) * interval;
+      const newKey = formatKey(keyNum);
+      const photo = newPhotosArray[start + i];
+      if (photo.sort_order !== newKey) {
+        updates.push({ currentPublicId: photo.public_id, newSortKey: newKey });
+      }
+    }
+    return { updates, rebalanced: false } as const;
+  };
+
+  // Schedule a debounced save of last computed updates
+  const scheduleSave = (updates: { currentPublicId: string; newSortKey: string }[], newPhotosArray: CloudinaryImage[]) => {
+    setUnsavedChanges(true);
+    lastUpdatesRef.current = updates;
+
+    // Optimistically update local sort_order values so subsequent computations have latest keys
+    if (updates.length > 0) {
+      setPhotos(prev => prev.map(p => {
+        const u = updates.find(x => x.currentPublicId === p.public_id);
+        return u ? { ...p, sort_order: u.newSortKey } : p;
+      }));
+    }
+
+    // Cancel any in-flight request
+    if (saveAbortController.current) {
+      saveAbortController.current.abort();
+      saveAbortController.current = null;
+    }
+
+    // Clear timer
+    if (saveTimeoutId.current) {
+      window.clearTimeout(saveTimeoutId.current);
+      saveTimeoutId.current = undefined;
+    }
+
+    // Debounce
+    saveTimeoutId.current = window.setTimeout(async () => {
+      const payload = lastUpdatesRef.current;
+      if (!payload || payload.length === 0) {
+        setUnsavedChanges(false);
+        return;
+      }
+      setIsSavingOrder(true);
+      const controller = new AbortController();
+      saveAbortController.current = controller;
+      try {
+        const response = await fetch('/api/album/reorder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updates: payload.map(u => ({ currentPublicId: u.currentPublicId, newSortKey: u.newSortKey })) }),
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.details || errorData.error || 'Failed to save order';
+          throw new Error(errorMessage);
+        }
+        setUnsavedChanges(false);
+      } catch (err) {
+        if ((err as any)?.name === 'AbortError') {
+          // Swallow aborts
+        } else {
+          console.error('Error saving order:', err);
+          toast.error('Failed to save changes');
+        }
+      } finally {
+        if (saveAbortController.current === controller) {
+          saveAbortController.current = null;
+        }
+        setIsSavingOrder(false);
+      }
+    }, 700);
+  };
+
   // Drag and drop sensors
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -98,6 +230,11 @@ export function PhotoGallery() {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // Prevent drag operations during blocking processing
+    if (isProcessingOrder) {
+      return;
+    }
 
     if (active.id !== over?.id && isAdmin && sortBy === 'custom') {
       const draggedPhotoId = active.id as string;
@@ -179,43 +316,28 @@ export function PhotoGallery() {
         }
       }
 
+      // Optimistically update UI
+      const prevPhotos = photos;
       setPhotos(newPhotos);
 
-      // Update the order on the server
-      setIsReordering(true);
-      try {
-        const photoIds = newPhotos.map(photo => photo.public_id);
-        const response = await fetch('/api/album/reorder', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ photoIds }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.details || errorData.error || 'Failed to update photo order';
-          throw new Error(`HTTP ${response.status}: ${errorMessage}`);
-        }
-
-        const result = await response.json();
+      // Compute minimal changed region and schedule a debounced background save
+      const region = computeChangedRegion(prevPhotos, newPhotos);
+      if (region) {
+        const { start, end } = region;
+        const { updates, rebalanced } = computeRegionUpdates(newPhotos, start, end);
+        scheduleSave(updates, newPhotos);
         const photoCount = photosToMove.length;
-        const updateTime = result.metadata?.updateTime ? ` (${result.metadata.updateTime}ms)` : '';
-        toast.success(`${photoCount} photo${photoCount !== 1 ? 's' : ''} reordered successfully${updateTime}`);
-      } catch (error) {
-        console.error('Error updating photo order:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update photo order';
-        toast.error(`Reorder failed: ${errorMessage}`);
-        // Revert the local change
-        fetchPhotos();
-      } finally {
-        setIsReordering(false);
+        toast.success(`${photoCount} photo${photoCount !== 1 ? 's' : ''} reordered` + (rebalanced ? ' (rebalanced)' : ''));
       }
     }
   };
 
   const handlePhotoClick = (photo: CloudinaryImage, index: number, event?: React.MouseEvent) => {
+    // Prevent photo interactions during processing
+    if (isProcessingOrder) {
+      return;
+    }
+
     if (isMultiSelectMode) {
       if (event?.shiftKey && lastClickedIndex !== -1) {
         // Shift+click: select range from last clicked to current
@@ -352,8 +474,7 @@ export function PhotoGallery() {
     if (selectedPhotoIds.size < 2 || sortBy !== 'custom') return;
 
     try {
-      setIsReordering(true);
-      
+      // Non-blocking background save
       // Get selected photos in current order
       const selectedPhotos = photos.filter(photo => selectedPhotoIds.has(photo.public_id));
       
@@ -377,26 +498,15 @@ export function PhotoGallery() {
         newPhotos[targetIndex] = photo;
       });
       
-      // Update the UI optimistically
+      // Update the UI optimistically and schedule background save for changed region
+      const prevPhotos = photos;
       setPhotos(newPhotos);
-      
-      // Prepare the reorder API call - only for the affected photos
-      const photoIds = newPhotos.map(photo => photo.public_id);
-      
-      const response = await fetch('/api/album/reorder', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ photoIds }),
-      });
-
-      if (!response.ok) {
-        // Revert on failure
-        setPhotos(photos);
-        throw new Error('Failed to reverse photo order');
+      const region = computeChangedRegion(prevPhotos, newPhotos);
+      if (region) {
+        const { start, end } = region;
+        const { updates } = computeRegionUpdates(newPhotos, start, end);
+        scheduleSave(updates, newPhotos);
       }
-
       toast.success(`Reversed order of ${selectedPhotoIds.size} selected photos`);
       
       // Clear selection after successful reverse
@@ -408,7 +518,6 @@ export function PhotoGallery() {
       // Revert changes on error
       fetchPhotos();
     } finally {
-      setIsReordering(false);
     }
   };
 
@@ -525,33 +634,52 @@ export function PhotoGallery() {
           onClearSelection={clearSelection}
           onDeleteSelected={handleDeleteSelected}
           onReverseOrder={handleReverseOrder}
+          isProcessingOrder={isProcessingOrder}
+          isSavingOrder={isSavingOrder}
+          unsavedChanges={unsavedChanges}
         />
 
         {/* Photo Grid */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={photos.map(p => p.public_id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className={`grid ${getGridClasses()} gap-4 ${isReordering ? 'pointer-events-none opacity-75' : ''}`}>
-              {photos.map((photo, index) => (
-                <DraggablePhotoCard
-                  key={photo.public_id}
-                  photo={photo}
-                  onClick={(event) => handlePhotoClick(photo, index, event)}
-                  isAdmin={isAdmin}
-                  isDragEnabled={sortBy === 'custom' && isAdmin}
-                  isMultiSelectMode={isMultiSelectMode}
-                  isSelected={selectedPhotoIds.has(photo.public_id)}
-                />
-              ))}
+        <div className="relative">
+          {/* Loading Overlay */}
+          {isProcessingOrder && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 p-6 bg-background/90 rounded-lg shadow-lg border">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {isReordering && 'Reordering photos...'}
+                  {isSettingCustom && 'Setting custom order...'}
+                  {isDeleting && 'Deleting photos...'}
+                </p>
+              </div>
             </div>
-          </SortableContext>
-        </DndContext>
+          )}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={photos.map(p => p.public_id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className={`grid ${getGridClasses()} gap-4 ${isProcessingOrder ? 'pointer-events-none opacity-75' : ''}`}>
+                {photos.map((photo, index) => (
+                  <DraggablePhotoCard
+                    key={photo.public_id}
+                    photo={photo}
+                    onClick={(event) => handlePhotoClick(photo, index, event)}
+                    isAdmin={isAdmin}
+                    isDragEnabled={sortBy === 'custom' && isAdmin && !isProcessingOrder}
+                    isMultiSelectMode={isMultiSelectMode}
+                    isSelected={selectedPhotoIds.has(photo.public_id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
       </div>
 
       {selectedPhoto && (
