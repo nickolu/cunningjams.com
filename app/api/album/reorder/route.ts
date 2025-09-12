@@ -41,30 +41,42 @@ export async function POST(request: NextRequest) {
     // Update photo order by renaming public IDs
     console.log(`[REORDER-${requestId}] 🔍 Updating photo order for ${orderUpdates.length} photos...`);
     const updateStartTime = Date.now();
-    const success = await updatePhotoOrder(orderUpdates);
-    const updateTime = Date.now() - updateStartTime;
+    
+    try {
+      const success = await updatePhotoOrder(orderUpdates);
+      const updateTime = Date.now() - updateStartTime;
 
-    if (!success) {
-      console.log(`[REORDER-${requestId}] ❌ Failed to update custom order`);
+      if (!success) {
+        console.log(`[REORDER-${requestId}] ❌ Failed to update custom order - updatePhotoOrder returned false`);
+        return Response.json(
+          { error: 'Failed to update photo order - operation returned false' },
+          { status: 500 }
+        );
+      }
+      
+      const totalTime = Date.now() - startTime;
+      console.log(`[REORDER-${requestId}] ✅ Custom order updated successfully in ${totalTime}ms (update: ${updateTime}ms)`);
+
+      return Response.json({ 
+        success: true,
+        metadata: {
+          updatedCount: orderUpdates.length,
+          updateTime,
+          totalTime,
+          requestId,
+        }
+      });
+    } catch (updateError) {
+      const updateTime = Date.now() - updateStartTime;
+      console.error(`[REORDER-${requestId}] ❌ Exception during photo order update (${updateTime}ms):`, updateError);
       return Response.json(
-        { error: 'Failed to update photo order' },
+        { 
+          error: 'Failed to update photo order - exception occurred',
+          details: updateError instanceof Error ? updateError.message : String(updateError)
+        },
         { status: 500 }
       );
     }
-
-    const totalTime = Date.now() - startTime;
-    
-    console.log(`[REORDER-${requestId}] ✅ Custom order updated successfully in ${totalTime}ms`);
-
-    return Response.json({ 
-      success: true,
-      metadata: {
-        updatedCount: orderUpdates.length,
-        updateTime,
-        totalTime,
-        requestId,
-      }
-    });
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error(`[REORDER-${requestId}] 💥 Error updating photo order (${totalTime}ms):`, error);

@@ -191,27 +191,74 @@ export async function setCurrentOrderAsCustom(photoIds: string[]): Promise<boole
 
 export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder: number }[]): Promise<boolean> {
   try {
-    console.log('Updating photo order with:', orderUpdates);
+    console.log(`🔄 Starting photo order update for ${orderUpdates.length} photos`);
+    console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder })));
+    
+    // Check Cloudinary configuration
+    const config = cloudinary.config();
+    console.log('Cloudinary config check:', {
+      cloud_name: !!config.cloud_name,
+      api_key: !!config.api_key,
+      api_secret: !!config.api_secret
+    });
     
     // Use context metadata with padded order numbers for proper sorting
-    const updatePromises = orderUpdates.map(async ({ currentPublicId, newOrder }) => {
-      // Use padded numbers for proper sorting: 001, 002, 003, etc.
-      const paddedOrder = String(newOrder).padStart(3, '0');
+    // Process in batches to avoid rate limiting
+    const BATCH_SIZE = 5;
+    const results: Array<{ success: boolean; publicId: string; result?: any; error?: string }> = [];
+    
+    for (let i = 0; i < orderUpdates.length; i += BATCH_SIZE) {
+      const batch = orderUpdates.slice(i, i + BATCH_SIZE);
+      console.log(`🔄 Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderUpdates.length / BATCH_SIZE)} (${batch.length} items)`);
       
-      console.log(`Setting context sort_order=${paddedOrder} for ${currentPublicId}`);
-      
-      // Update the context with the order
-      const result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
-      console.log(`Context update result for ${currentPublicId}:`, result);
-      return result;
-    });
+      const batchPromises = batch.map(async ({ currentPublicId, newOrder }, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        try {
+          // Use padded numbers for proper sorting: 001, 002, 003, etc.
+          const paddedOrder = String(newOrder).padStart(3, '0');
+          
+          console.log(`📝 [${globalIndex + 1}/${orderUpdates.length}] Setting context sort_order=${paddedOrder} for ${currentPublicId}`);
+          
+          // Update the context with the order
+          const result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
+          console.log(`✅ [${globalIndex + 1}/${orderUpdates.length}] Context update successful for ${currentPublicId}`);
+          return { success: true, publicId: currentPublicId, result };
+        } catch (error: any) {
+          console.error(`❌ [${globalIndex + 1}/${orderUpdates.length}] Context update failed for ${currentPublicId}:`, error);
+          return { success: false, publicId: currentPublicId, error: error.message || String(error) };
+        }
+      });
 
-    const results = await Promise.all(updatePromises);
-    console.log('All context updates completed:', results);
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < orderUpdates.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    const successful = results.filter(r => r.success);
+    const failed = results.filter(r => !r.success);
+    
+    console.log(`📊 Update results: ${successful.length} successful, ${failed.length} failed`);
+    
+    if (failed.length > 0) {
+      console.error('❌ Failed updates:', failed);
+      throw new Error(`Failed to update ${failed.length} out of ${orderUpdates.length} photos`);
+    }
+    
+    console.log('✅ All context updates completed successfully');
     return true;
   } catch (error) {
-    console.error('Error updating photo order:', error);
-    console.error('Error details:', error);
+    console.error('💥 Error updating photo order:', error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    } else {
+      console.error('Non-Error object thrown:', error);
+    }
     return false;
   }
 }

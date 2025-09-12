@@ -194,14 +194,19 @@ export function PhotoGallery() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to update photo order');
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.details || errorData.error || 'Failed to update photo order';
+          throw new Error(`HTTP ${response.status}: ${errorMessage}`);
         }
 
+        const result = await response.json();
         const photoCount = photosToMove.length;
-        toast.success(`${photoCount} photo${photoCount !== 1 ? 's' : ''} reordered successfully`);
+        const updateTime = result.metadata?.updateTime ? ` (${result.metadata.updateTime}ms)` : '';
+        toast.success(`${photoCount} photo${photoCount !== 1 ? 's' : ''} reordered successfully${updateTime}`);
       } catch (error) {
         console.error('Error updating photo order:', error);
-        toast.error('Failed to update photo order');
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update photo order';
+        toast.error(`Reorder failed: ${errorMessage}`);
         // Revert the local change
         fetchPhotos();
       } finally {
