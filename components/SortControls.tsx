@@ -89,7 +89,7 @@ export function SortControls({
     };
 
     const handleIncrease = () => {
-      const newSize = Math.min(6, thumbnailSize + 1);
+      const newSize = Math.min(4, thumbnailSize + 1);
       onThumbnailSizeChange(newSize);
     };
 
@@ -142,7 +142,7 @@ export function SortControls({
         <Slider
           value={[thumbnailSize]}
           onValueChange={(value) => onThumbnailSizeChange(value[0])}
-          max={6}
+          max={12}
           min={1}
           step={1}
           disabled={isProcessingOrder}
