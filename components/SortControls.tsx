@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ArrowUpDown, Grid3X3, Grid2X2, Save, CheckSquare, Square, MousePointer, Trash2, Minus, Plus } from 'lucide-react';
+import { ArrowUpDown, Grid3X3, Grid2X2, Save, CheckSquare, Square, MousePointer, Trash2, Minus, Plus, ArrowUpDown as ReverseIcon } from 'lucide-react';
 import { SortOption } from '@/lib/cloudinary';
 import { useMobile } from '@/hooks/use-mobile';
 
@@ -27,6 +27,7 @@ interface SortControlsProps {
   onSelectAll?: () => void;
   onClearSelection?: () => void;
   onDeleteSelected?: (event: React.MouseEvent) => void;
+  onReverseOrder?: () => void;
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -51,7 +52,8 @@ export function SortControls({
   selectedCount = 0,
   onSelectAll,
   onClearSelection,
-  onDeleteSelected
+  onDeleteSelected,
+  onReverseOrder
 }: SortControlsProps) {
   const [isSettingCustom, setIsSettingCustom] = useState(false);
   const isMobile = useMobile();
@@ -241,6 +243,18 @@ export function SortControls({
               >
                 <Square className="w-4 h-4" />
                 Clear Selection
+              </Button>
+            )}
+
+            {onReverseOrder && selectedCount > 1 && sortBy === 'custom' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onReverseOrder}
+                className="flex items-center gap-2"
+              >
+                <ReverseIcon className="w-4 h-4" />
+                Reverse Order
               </Button>
             )}
 

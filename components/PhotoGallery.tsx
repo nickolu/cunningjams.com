@@ -348,6 +348,70 @@ export function PhotoGallery() {
     }
   };
 
+  const handleReverseOrder = async () => {
+    if (selectedPhotoIds.size < 2 || sortBy !== 'custom') return;
+
+    try {
+      setIsReordering(true);
+      
+      // Get selected photos in current order
+      const selectedPhotos = photos.filter(photo => selectedPhotoIds.has(photo.public_id));
+      
+      // Create a map of current positions for selected photos
+      const selectedPositions = new Map<string, number>();
+      selectedPhotos.forEach(photo => {
+        const currentIndex = photos.findIndex(p => p.public_id === photo.public_id);
+        selectedPositions.set(photo.public_id, currentIndex);
+      });
+      
+      // Get the positions in sorted order (original positions)
+      const sortedPositions = Array.from(selectedPositions.values()).sort((a, b) => a - b);
+      
+      // Reverse the selected photos array
+      const reversedPhotos = [...selectedPhotos].reverse();
+      
+      // Create new photo array with reversed selection
+      const newPhotos = [...photos];
+      reversedPhotos.forEach((photo, index) => {
+        const targetIndex = sortedPositions[index];
+        newPhotos[targetIndex] = photo;
+      });
+      
+      // Update the UI optimistically
+      setPhotos(newPhotos);
+      
+      // Prepare the reorder API call - only for the affected photos
+      const photoIds = newPhotos.map(photo => photo.public_id);
+      
+      const response = await fetch('/api/album/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photoIds }),
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        setPhotos(photos);
+        throw new Error('Failed to reverse photo order');
+      }
+
+      toast.success(`Reversed order of ${selectedPhotoIds.size} selected photos`);
+      
+      // Clear selection after successful reverse
+      clearSelection();
+      
+    } catch (error) {
+      console.error('Error reversing photo order:', error);
+      toast.error('Failed to reverse photo order');
+      // Revert changes on error
+      fetchPhotos();
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const confirmDelete = async () => {
     if (selectedPhotoIds.size === 0) return;
 
@@ -460,6 +524,7 @@ export function PhotoGallery() {
           onSelectAll={selectAllPhotos}
           onClearSelection={clearSelection}
           onDeleteSelected={handleDeleteSelected}
+          onReverseOrder={handleReverseOrder}
         />
 
         {/* Photo Grid */}
