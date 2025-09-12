@@ -41,6 +41,7 @@ export function PhotoGallery() {
   const [isSettingCustom, setIsSettingCustom] = useState(false);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [lastClickedIndex, setLastClickedIndex] = useState<number>(-1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -209,9 +210,16 @@ export function PhotoGallery() {
     }
   };
 
-  const handlePhotoClick = (photo: CloudinaryImage, index: number) => {
+  const handlePhotoClick = (photo: CloudinaryImage, index: number, event?: React.MouseEvent) => {
     if (isMultiSelectMode) {
-      togglePhotoSelection(photo.public_id);
+      if (event?.shiftKey && lastClickedIndex !== -1) {
+        // Shift+click: select range from last clicked to current
+        selectPhotoRange(lastClickedIndex, index);
+      } else {
+        // Regular click in multi-select mode: toggle selection
+        togglePhotoSelection(photo.public_id);
+      }
+      setLastClickedIndex(index);
     } else {
       setSelectedPhoto(photo);
       setSelectedIndex(index);
@@ -230,18 +238,36 @@ export function PhotoGallery() {
     });
   };
 
+  const selectPhotoRange = (startIndex: number, endIndex: number) => {
+    const minIndex = Math.min(startIndex, endIndex);
+    const maxIndex = Math.max(startIndex, endIndex);
+    
+    setSelectedPhotoIds(prev => {
+      const newSet = new Set(prev);
+      for (let i = minIndex; i <= maxIndex; i++) {
+        if (i >= 0 && i < photos.length) {
+          newSet.add(photos[i].public_id);
+        }
+      }
+      return newSet;
+    });
+  };
+
   const selectAllPhotos = () => {
     setSelectedPhotoIds(new Set(photos.map(photo => photo.public_id)));
   };
 
   const clearSelection = () => {
     setSelectedPhotoIds(new Set());
+    setLastClickedIndex(-1);
   };
 
   const toggleMultiSelectMode = () => {
     setIsMultiSelectMode(!isMultiSelectMode);
     if (isMultiSelectMode) {
       clearSelection();
+    } else {
+      setLastClickedIndex(-1);
     }
   };
 
@@ -446,7 +472,7 @@ export function PhotoGallery() {
                 <DraggablePhotoCard
                   key={photo.public_id}
                   photo={photo}
-                  onClick={() => handlePhotoClick(photo, index)}
+                  onClick={(event) => handlePhotoClick(photo, index, event)}
                   isAdmin={isAdmin}
                   isDragEnabled={sortBy === 'custom' && isAdmin}
                   isMultiSelectMode={isMultiSelectMode}

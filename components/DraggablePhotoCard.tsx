@@ -8,7 +8,7 @@ import { GripVertical, Check } from 'lucide-react';
 
 interface DraggablePhotoCardProps {
   photo: CloudinaryImage;
-  onClick: () => void;
+  onClick: (event?: React.MouseEvent) => void;
   isAdmin: boolean;
   isDragEnabled: boolean;
   isMultiSelectMode?: boolean;
@@ -48,7 +48,7 @@ export function DraggablePhotoCard({
     // Regular photo card for non-admin users or when no admin features are enabled
     return (
       <div ref={setNodeRef} style={style}>
-        <PhotoCard photo={photo} onClick={onClick} />
+        <PhotoCard photo={photo} onClick={(e) => onClick(e)} />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export function DraggablePhotoCard({
                 ? 'bg-blue-500 text-white' 
                 : 'bg-white/80 hover:bg-white border border-gray-300 hover:border-gray-400'
             }`}
-            onClick={onClick}
+            onClick={(e) => onClick(e)}
           >
             {isSelected && <Check className="w-4 h-4" />}
           </div>
@@ -92,7 +92,7 @@ export function DraggablePhotoCard({
       )}
       
       <div className={showSelectionUI ? 'cursor-pointer' : ''}>
-        <PhotoCard photo={photo} onClick={showSelectionUI ? onClick : onClick} />
+        <PhotoCard photo={photo} onClick={(e) => onClick(e)} />
       </div>
     </div>
   );

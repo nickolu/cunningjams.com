@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 interface PhotoCardProps {
   photo: CloudinaryImage;
-  onClick: () => void;
+  onClick: (event?: React.MouseEvent) => void;
 }
 
 function formatDuration(seconds?: number): string {
@@ -34,7 +34,7 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   return (
     <Card 
       className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden group"
-      onClick={onClick}
+      onClick={(e) => onClick(e)}
     >
       <div className="aspect-square relative">
         {isVideo && thumbnailError ? (
