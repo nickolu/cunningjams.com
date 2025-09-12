@@ -24,9 +24,11 @@ export type SortOption = 'custom' | 'created-newest' | 'created-oldest' | 'name-
  */
 export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<CloudinaryImage[]> {
   try {
+    // Search for both images and videos explicitly to ensure we get all resource types
     let searchQuery = cloudinary.search
-      .expression(`folder:${ALBUM_FOLDER}`)
+      .expression(`folder:${ALBUM_FOLDER} AND (resource_type:image OR resource_type:video)`)
       .with_field('context')  // Explicitly request context metadata
+      .with_field('tags')     // Also request tags (sometimes context is stored here)
       .max_results(500); // Adjust as needed
     
     // Apply sorting based on sortBy parameter
@@ -59,19 +61,35 @@ export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<Clo
     
     const result = await searchQuery.execute();
 
-    let photos = result.resources.map((resource: any) => ({
-      public_id: resource.public_id,
-      secure_url: resource.secure_url,
-      width: resource.width,
-      height: resource.height,
-      format: resource.format,
-      created_at: resource.created_at,
-      bytes: resource.bytes,
-      original_filename: resource.original_filename,
-      resource_type: resource.resource_type,
-      duration: resource.duration,
-      sort_order: resource.context?.sort_order || null,
-    }));
+    let photos = result.resources.map((resource: any) => {
+      // Try to get sort_order from both context and tags for all resource types
+      let sortOrder = null;
+      
+      // First try context metadata (works for both images and videos)
+      if (resource.context?.sort_order) {
+        sortOrder = resource.context.sort_order;
+      } else if (resource.resource_type === 'video') {
+        // For videos, also check tags as fallback
+        const sortTag = resource.tags?.find((tag: string) => tag.startsWith('sort_order_'));
+        if (sortTag) {
+          sortOrder = sortTag.replace('sort_order_', '');
+        }
+      }
+      
+      return {
+        public_id: resource.public_id,
+        secure_url: resource.secure_url,
+        width: resource.width,
+        height: resource.height,
+        format: resource.format,
+        created_at: resource.created_at,
+        bytes: resource.bytes,
+        original_filename: resource.original_filename,
+        resource_type: resource.resource_type,
+        duration: resource.duration,
+        sort_order: sortOrder,
+      };
+    });
     
     // If using custom sort, sort by sort_order context, then by created_at
     if (sortBy === 'custom') {
@@ -92,14 +110,29 @@ export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<Clo
     if (process.env.NODE_ENV === 'development') {
       console.log('Sample photos with sort order:', photos.slice(0, 3).map((p: CloudinaryImage) => ({ 
         id: p.public_id.split('/').pop(), // Just show the filename part
+        type: p.resource_type,
         order: p.sort_order 
       })));
       console.log('Raw resource fields sample:', result.resources.slice(0, 2).map((r: any) => ({
         id: r.public_id,
+        type: r.resource_type,
         created_at: r.created_at,
         uploaded_at: r.uploaded_at,
         original_filename: r.original_filename,
-        context: r.context
+        context: r.context,
+        tags: r.tags
+      })));
+      
+      // Specifically check videos vs images for context metadata
+      const videos = photos.filter((p: CloudinaryImage) => p.resource_type === 'video');
+      const images = photos.filter((p: CloudinaryImage) => p.resource_type === 'image');
+      console.log('Video sort orders:', videos.slice(0, 3).map((v: CloudinaryImage) => ({ 
+        id: v.public_id.split('/').pop(), 
+        order: v.sort_order 
+      })));
+      console.log('Image sort orders:', images.slice(0, 3).map((i: CloudinaryImage) => ({ 
+        id: i.public_id.split('/').pop(), 
+        order: i.sort_order 
       })));
     }
     return photos;
@@ -174,13 +207,15 @@ export async function uploadToAlbum(
  */
 export async function setCurrentOrderAsCustom(photoIds: string[]): Promise<boolean> {
   try {
-    console.log('Setting current order as custom for', photoIds.length, 'photos');
+    console.log('Setting current order as custom for', photoIds.length, 'items (photos and videos)');
     
     // Create order updates based on current array order
     const orderUpdates = photoIds.map((publicId, index) => ({
       currentPublicId: publicId,
       newOrder: index,
     }));
+    
+    console.log('Order updates to apply:', orderUpdates.slice(0, 5).map(u => ({ id: u.currentPublicId, order: u.newOrder })));
     
     return await updatePhotoOrder(orderUpdates);
   } catch (error) {
@@ -200,7 +235,7 @@ function toPaddedSortKeyFromIndex(index: number): string {
 
 export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder?: number; newSortKey?: string }[]): Promise<boolean> {
   try {
-    console.log(`🔄 Starting photo order update for ${orderUpdates.length} photos`);
+    console.log(`🔄 Starting photo order update for ${orderUpdates.length} items`);
     console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder, key: u.newSortKey })));
     
     // Check Cloudinary configuration
@@ -211,7 +246,22 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
       api_secret: !!config.api_secret
     });
     
-    // Use context metadata with padded order keys for proper lexicographic sorting
+    // Get resource types by fetching all album photos and matching by public_id
+    console.log('🔍 Fetching resource types from album photos...');
+    const resourceTypes = new Map<string, string>();
+    
+    try {
+      // Get all photos from the album to determine resource types
+      const allPhotos = await getAlbumPhotos('custom');
+      allPhotos.forEach(photo => {
+        resourceTypes.set(photo.public_id, photo.resource_type);
+      });
+      
+      console.log(`📋 Found resource types for ${resourceTypes.size} items`);
+    } catch (searchError) {
+      console.warn('⚠️ Failed to get album photos, falling back to individual resource calls:', searchError);
+    }
+    
     // Process in batches to avoid rate limiting
     const BATCH_SIZE = 5;
     const results: Array<{ success: boolean; publicId: string; result?: any; error?: string }> = [];
@@ -226,14 +276,71 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
           // Prefer provided sort key, else derive from index using default spacing
           const paddedOrder = newSortKey ?? toPaddedSortKeyFromIndex(newOrder ?? 0);
           
-          console.log(`📝 [${globalIndex + 1}/${orderUpdates.length}] Setting context sort_order=${paddedOrder} for ${currentPublicId}`);
+          // Get resource type from our album photos or fallback to individual call
+          let resourceType = resourceTypes.get(currentPublicId);
           
-          // Update the context with the order
-          const result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
-          console.log(`✅ [${globalIndex + 1}/${orderUpdates.length}] Context update successful for ${currentPublicId}`);
-          return { success: true, publicId: currentPublicId, result };
+          if (!resourceType) {
+            // Fallback: try individual resource call
+            try {
+              const resource = await cloudinary.api.resource(currentPublicId);
+              resourceType = resource.resource_type;
+            } catch (e) {
+              console.warn(`⚠️ Could not determine resource type for ${currentPublicId}, defaulting to image`);
+              resourceType = 'image';
+            }
+          }
+          
+          console.log(`📝 [${globalIndex + 1}/${orderUpdates.length}] Setting sort_order=${paddedOrder} for ${currentPublicId} (${resourceType})`);
+          
+          let result;
+          if (resourceType === 'video') {
+            // For videos, try multiple approaches
+            console.log(`🎥 Attempting to update video: ${currentPublicId}`);
+            
+            // First try: use explicit API to update context
+            try {
+              result = await cloudinary.uploader.explicit(currentPublicId, {
+                type: 'upload',
+                resource_type: 'video',
+                context: `sort_order=${paddedOrder}`
+              });
+              console.log(`✅ Video context update successful via explicit API`);
+            } catch (explicitError) {
+              console.warn(`⚠️ Explicit API failed, trying tags:`, explicitError);
+              
+              // Fallback: try tags
+              try {
+                result = await cloudinary.uploader.add_tag(`sort_order_${paddedOrder}`, [currentPublicId]);
+                console.log(`✅ Video tag update successful`);
+              } catch (tagError) {
+                console.warn(`⚠️ Tag API also failed, trying context:`, tagError);
+                
+                // Last resort: try context anyway
+                result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
+                console.log(`✅ Video context update successful via context API`);
+              }
+            }
+          } else {
+            // For images, use context metadata
+            console.log(`🖼️ Using context for image: ${currentPublicId}`);
+            result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
+          }
+          
+          // Verify the update was successful
+          // Different APIs return different response formats
+          const isSuccess = (result && result.public_ids && result.public_ids.length > 0) || 
+                           (result && result.public_id && result.context?.custom?.sort_order) ||
+                           (result && result.public_id && result.context?.sort_order);
+          
+          if (isSuccess) {
+            console.log(`✅ [${globalIndex + 1}/${orderUpdates.length}] Update successful for ${currentPublicId} (${resourceType})`);
+            return { success: true, publicId: currentPublicId, result };
+          } else {
+            console.warn(`⚠️ [${globalIndex + 1}/${orderUpdates.length}] Update may have failed for ${currentPublicId} - result:`, result);
+            return { success: false, publicId: currentPublicId, error: 'Update returned unexpected result' };
+          }
         } catch (error: any) {
-          console.error(`❌ [${globalIndex + 1}/${orderUpdates.length}] Context update failed for ${currentPublicId}:`, error);
+          console.error(`❌ [${globalIndex + 1}/${orderUpdates.length}] Update failed for ${currentPublicId}:`, error);
           return { success: false, publicId: currentPublicId, error: error.message || String(error) };
         }
       });
@@ -254,10 +361,10 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
     
     if (failed.length > 0) {
       console.error('❌ Failed updates:', failed);
-      throw new Error(`Failed to update ${failed.length} out of ${orderUpdates.length} photos`);
+      throw new Error(`Failed to update ${failed.length} out of ${orderUpdates.length} items`);
     }
     
-    console.log('✅ All context updates completed successfully');
+    console.log('✅ All updates completed successfully');
     return true;
   } catch (error) {
     console.error('💥 Error updating photo order:', error);
