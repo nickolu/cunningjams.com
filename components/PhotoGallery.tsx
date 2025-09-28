@@ -632,7 +632,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
       <div>
         <Header photos={[]} onRefreshGallery={fetchPhotos} />
         <div className="container mx-auto px-4 py-8">
-          <EmptyState />
+          <EmptyState albumConfig={albumConfig} />
         </div>
       </div>
     );
