@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAuthFromRequest } from './lib/auth';
+import { checkAuthFromRequest, checkAlbumAuthFromRequest } from './lib/auth';
+import { albumExists } from './lib/album-config';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,26 +10,62 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
-    (!pathname.startsWith('/album') && !pathname.startsWith('/auth/album'))
+    (!pathname.startsWith('/album') && !pathname.startsWith('/auth/album') && !pathname.startsWith('/albums/'))
   ) {
     return NextResponse.next();
   }
 
-  // Check if user is authenticated for album access
-  const isAuthenticated = await checkAuthFromRequest(request);
+  // Extract album slug from /albums/[albumSlug] paths
+  const albumsMatch = pathname.match(/^\/albums\/([^/]+)/);
+  const albumSlug = albumsMatch ? albumsMatch[1] : null;
 
-  // If not authenticated and trying to access album routes, redirect to password page
-  if (!isAuthenticated && pathname.startsWith('/album') && pathname !== '/auth/album/password') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth/album/password';
-    return NextResponse.redirect(url);
+  // Check authentication based on route type
+  let isAuthenticated: boolean;
+
+  if (albumSlug) {
+    // For /albums/[albumSlug] routes, check if album exists first
+    if (albumExists(albumSlug)) {
+      isAuthenticated = await checkAlbumAuthFromRequest(request, albumSlug);
+    } else {
+      // Let the page component handle non-existent albums
+      return NextResponse.next();
+    }
+  } else {
+    // For legacy /album routes, use legacy authentication
+    isAuthenticated = await checkAuthFromRequest(request);
   }
 
-  // If authenticated and trying to access password page, redirect to album
-  if (isAuthenticated && pathname === '/auth/album/password') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/album';
-    return NextResponse.redirect(url);
+  // Handle album-specific routes
+  if (albumSlug) {
+    const passwordPath = `/auth/albums/${albumSlug}/password`;
+    const albumPath = `/albums/${albumSlug}`;
+
+    // If not authenticated and trying to access album, redirect to password page
+    if (!isAuthenticated && pathname === albumPath) {
+      const url = request.nextUrl.clone();
+      url.pathname = passwordPath;
+      return NextResponse.redirect(url);
+    }
+
+    // If authenticated and trying to access password page, redirect to album
+    if (isAuthenticated && pathname === passwordPath) {
+      const url = request.nextUrl.clone();
+      url.pathname = albumPath;
+      return NextResponse.redirect(url);
+    }
+  } else {
+    // Handle legacy album routes
+    if (!isAuthenticated && pathname.startsWith('/album') && pathname !== '/auth/album/password') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth/album/password';
+      return NextResponse.redirect(url);
+    }
+
+    if (isAuthenticated && pathname === '/auth/album/password') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/album';
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();

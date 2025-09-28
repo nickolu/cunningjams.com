@@ -1,5 +1,6 @@
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CloudinaryImage } from './cloudinary-client';
+import { getAlbumConfig } from './album-config';
 
 // Ensure this only runs on the server
 if (typeof window === 'undefined') {
@@ -11,7 +12,7 @@ if (typeof window === 'undefined') {
   });
 }
 
-
+// Legacy constant for backwards compatibility
 export const ALBUM_FOLDER = '2025-steves-40th';
 
 // Re-export types from client module
@@ -21,12 +22,25 @@ export type SortOption = 'custom' | 'created-newest' | 'created-oldest' | 'name-
 
 /**
  * Fetches all media (images and videos) from the album folder
+ * @param sortBy - How to sort the results
+ * @param albumSlug - Optional album slug to get photos from. If not provided, uses legacy ALBUM_FOLDER
  */
-export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<CloudinaryImage[]> {
+export async function getAlbumPhotos(sortBy: SortOption = 'custom', albumSlug?: string): Promise<CloudinaryImage[]> {
   try {
+    // Determine the folder to search in
+    let folderName = ALBUM_FOLDER; // Default to legacy folder
+
+    if (albumSlug) {
+      const albumConfig = getAlbumConfig(albumSlug);
+      if (!albumConfig) {
+        throw new Error(`Album configuration not found for slug: ${albumSlug}`);
+      }
+      folderName = albumConfig.cloudinaryFolder;
+    }
+
     // Search for both images and videos explicitly to ensure we get all resource types
     let searchQuery = cloudinary.search
-      .expression(`folder:${ALBUM_FOLDER} AND (resource_type:image OR resource_type:video)`)
+      .expression(`folder:${folderName} AND (resource_type:image OR resource_type:video)`)
       .with_field('context')  // Explicitly request context metadata
       .with_field('tags')     // Also request tags (sometimes context is stored here)
       .max_results(500); // Adjust as needed
@@ -143,7 +157,8 @@ export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<Clo
     if (error && typeof error === 'object' && 'error' in error) {
       const cloudinaryError = error.error as any;
       if (cloudinaryError?.http_code === 400 || cloudinaryError?.message?.includes('folder')) {
-        console.log(`Album folder '${ALBUM_FOLDER}' not found, returning empty array`);
+        const folder = albumSlug ? getAlbumConfig(albumSlug)?.cloudinaryFolder || 'unknown' : ALBUM_FOLDER;
+        console.log(`Album folder '${folder}' not found, returning empty array`);
         return [];
       }
     }
@@ -154,21 +169,37 @@ export async function getAlbumPhotos(sortBy: SortOption = 'custom'): Promise<Clo
 
 /**
  * Uploads a single image to the album folder
+ * @param file - The file buffer to upload
+ * @param filename - Optional filename
+ * @param fileType - Optional file type
+ * @param albumSlug - Optional album slug. If not provided, uses legacy ALBUM_FOLDER
  */
 export async function uploadToAlbum(
   file: Buffer,
   filename?: string,
-  fileType?: string
+  fileType?: string,
+  albumSlug?: string
 ): Promise<CloudinaryImage> {
   const isVideo = fileType?.startsWith('video/');
   
   try {
+    // Determine the folder to upload to
+    let folderName = ALBUM_FOLDER; // Default to legacy folder
+
+    if (albumSlug) {
+      const albumConfig = getAlbumConfig(albumSlug);
+      if (!albumConfig) {
+        throw new Error(`Album configuration not found for slug: ${albumSlug}`);
+      }
+      folderName = albumConfig.cloudinaryFolder;
+    }
+
     // Determine the MIME type for the data URI
     const mimeType = fileType || (isVideo ? 'video/mp4' : 'image/jpeg');
     const base64String = `data:${mimeType};base64,${file.toString('base64')}`;
-    
+
     const uploadOptions: UploadApiOptions = {
-      folder: ALBUM_FOLDER,
+      folder: folderName,
       public_id: filename ? filename.replace(/\.[^/.]+$/, '') : undefined, // Remove extension
       resource_type: 'auto',
       quality: 'auto',
@@ -204,20 +235,22 @@ export async function uploadToAlbum(
 
 /**
  * Sets the current photo order as the custom order (admin function)
+ * @param photoIds - Array of public IDs in the desired order
+ * @param albumSlug - Optional album slug. If not provided, uses legacy behavior
  */
-export async function setCurrentOrderAsCustom(photoIds: string[]): Promise<boolean> {
+export async function setCurrentOrderAsCustom(photoIds: string[], albumSlug?: string): Promise<boolean> {
   try {
     console.log('Setting current order as custom for', photoIds.length, 'items (photos and videos)');
-    
+
     // Create order updates based on current array order
     const orderUpdates = photoIds.map((publicId, index) => ({
       currentPublicId: publicId,
       newOrder: index,
     }));
-    
+
     console.log('Order updates to apply:', orderUpdates.slice(0, 5).map(u => ({ id: u.currentPublicId, order: u.newOrder })));
-    
-    return await updatePhotoOrder(orderUpdates);
+
+    return await updatePhotoOrder(orderUpdates, albumSlug);
   } catch (error) {
     console.error('Error setting current order as custom:', error);
     return false;
@@ -233,7 +266,7 @@ function toPaddedSortKeyFromIndex(index: number): string {
   return String(numericValue).padStart(SORT_KEY_WIDTH, '0');
 }
 
-export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder?: number; newSortKey?: string }[]): Promise<boolean> {
+export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; newOrder?: number; newSortKey?: string }[], albumSlug?: string): Promise<boolean> {
   try {
     console.log(`🔄 Starting photo order update for ${orderUpdates.length} items`);
     console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder, key: u.newSortKey })));
@@ -249,14 +282,14 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
     // Get resource types by fetching all album photos and matching by public_id
     console.log('🔍 Fetching resource types from album photos...');
     const resourceTypes = new Map<string, string>();
-    
+
     try {
       // Get all photos from the album to determine resource types
-      const allPhotos = await getAlbumPhotos('custom');
+      const allPhotos = await getAlbumPhotos('custom', albumSlug);
       allPhotos.forEach(photo => {
         resourceTypes.set(photo.public_id, photo.resource_type);
       });
-      
+
       console.log(`📋 Found resource types for ${resourceTypes.size} items`);
     } catch (searchError) {
       console.warn('⚠️ Failed to get album photos, falling back to individual resource calls:', searchError);

@@ -1,18 +1,37 @@
 import { NextRequest } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { isAdmin, isAdminForAlbum } from '@/lib/auth';
 import { setCurrentOrderAsCustom } from '@/lib/cloudinary';
+import { albumExists } from '@/lib/album-config';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
-  
-  console.log(`[SET-CUSTOM-${requestId}] 🎯 Set custom order request started`);
+
+  // Get album slug from query parameters
+  const { searchParams } = new URL(request.url);
+  const albumSlug = searchParams.get('albumSlug');
+
+  console.log(`[SET-CUSTOM-${requestId}] 🎯 Set custom order request started for album: ${albumSlug || 'legacy'}`);
 
   try {
+    // Check if album exists (if albumSlug is provided)
+    if (albumSlug) {
+      console.log(`[SET-CUSTOM-${requestId}] 📂 Checking if album exists...`);
+      if (!albumExists(albumSlug)) {
+        console.log(`[SET-CUSTOM-${requestId}] ❌ Album not found: ${albumSlug}`);
+        return Response.json(
+          { error: 'Album not found' },
+          { status: 404 }
+        );
+      }
+    }
+
     // Check if user has admin privileges
     console.log(`[SET-CUSTOM-${requestId}] 🔐 Checking admin authentication...`);
-    const isAdminUser = await isAdmin();
-    
+    const isAdminUser = albumSlug
+      ? await isAdminForAlbum(albumSlug)
+      : await isAdmin();
+
     if (!isAdminUser) {
       console.log(`[SET-CUSTOM-${requestId}] ❌ Admin authentication failed`);
       return Response.json(
@@ -35,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Set the current order as custom
     console.log(`[SET-CUSTOM-${requestId}] 🔍 Setting custom order for ${photoIds.length} photos...`);
     const updateStartTime = Date.now();
-    const success = await setCurrentOrderAsCustom(photoIds);
+    const success = await setCurrentOrderAsCustom(photoIds, albumSlug || undefined);
     const updateTime = Date.now() - updateStartTime;
 
     if (!success) {
@@ -47,10 +66,10 @@ export async function POST(request: NextRequest) {
     }
 
     const totalTime = Date.now() - startTime;
-    
+
     console.log(`[SET-CUSTOM-${requestId}] ✅ Custom order set successfully in ${totalTime}ms`);
 
-    return Response.json({ 
+    return Response.json({
       success: true,
       message: 'Current order saved as custom order',
       metadata: {
@@ -58,6 +77,7 @@ export async function POST(request: NextRequest) {
         updateTime,
         totalTime,
         requestId,
+        albumSlug: albumSlug || null,
       }
     });
   } catch (error) {

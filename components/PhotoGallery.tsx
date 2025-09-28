@@ -12,6 +12,8 @@ import { DraggablePhotoCard } from '@/components/DraggablePhotoCard';
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { SortOption } from '@/lib/cloudinary';
+import { getAlbumConfig } from '@/lib/album-config';
+import { AlbumConfig } from '@/types/album';
 import { toast } from 'sonner';
 import {
   DndContext,
@@ -29,9 +31,14 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 
-export function PhotoGallery() {
+interface PhotoGalleryProps {
+  albumSlug?: string;
+}
+
+export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
   const [photos, setPhotos] = useState<CloudinaryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [albumConfig, setAlbumConfig] = useState<AlbumConfig | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<CloudinaryImage | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [sortBy, setSortBy] = useState<SortOption>('custom');
@@ -145,7 +152,8 @@ export function PhotoGallery() {
       const controller = new AbortController();
       saveAbortController.current = controller;
       try {
-        const response = await fetch('/api/album/reorder', {
+        const url = albumSlug ? `/api/album/reorder?albumSlug=${encodeURIComponent(albumSlug)}` : '/api/album/reorder';
+        const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ updates: payload.map(u => ({ currentPublicId: u.currentPublicId, newSortKey: u.newSortKey })) }),
@@ -188,7 +196,10 @@ export function PhotoGallery() {
   const fetchPhotos = async (sort: SortOption = sortBy) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/album/photos?sort=${sort}`);
+      const url = albumSlug
+        ? `/api/album/photos?sort=${sort}&albumSlug=${encodeURIComponent(albumSlug)}`
+        : `/api/album/photos?sort=${sort}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch photos');
@@ -222,6 +233,23 @@ export function PhotoGallery() {
   useEffect(() => {
     fetchPhotos();
   }, []);
+
+  // Fetch album configuration
+  useEffect(() => {
+    if (albumSlug) {
+      const config = getAlbumConfig(albumSlug);
+      setAlbumConfig(config);
+    } else {
+      // Fallback for legacy usage (no album slug)
+      setAlbumConfig({
+      title: "Steve's 40th Birthday",
+        subtitle: "Colorado Trip 2025",
+        cloudinaryFolder: "2025-steves-40th",
+        password: "pumphouse",
+        adminPassword: "admin2025"
+      });
+    }
+  }, [albumSlug]);
 
   const handleSortChange = (newSort: SortOption) => {
     setSortBy(newSort);
@@ -423,7 +451,8 @@ export function PhotoGallery() {
     setIsSettingCustom(true);
     try {
       const photoIds = photos.map(photo => photo.public_id);
-      const response = await fetch('/api/album/set-custom', {
+      const url = albumSlug ? `/api/album/set-custom?albumSlug=${encodeURIComponent(albumSlug)}` : '/api/album/set-custom';
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -527,7 +556,8 @@ export function PhotoGallery() {
     setIsDeleting(true);
     try {
       const photoIds = Array.from(selectedPhotoIds);
-      const response = await fetch('/api/album/delete', {
+      const url = albumSlug ? `/api/album/delete?albumSlug=${encodeURIComponent(albumSlug)}` : '/api/album/delete';
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -640,10 +670,10 @@ export function PhotoGallery() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Steve's 40th Birthday
+            {albumConfig?.title || "Photo Album"}
           </h1>
           <p className="text-xl text-muted-foreground mb-1">
-            Colorado Trip 2025
+            {albumConfig?.subtitle || "Shared Photos"}
           </p>
           <p className="text-sm text-muted-foreground">
             {photos.length} item{photos.length !== 1 ? 's' : ''} shared

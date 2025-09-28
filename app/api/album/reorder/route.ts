@@ -1,18 +1,37 @@
 import { NextRequest } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { isAdmin, isAdminForAlbum } from '@/lib/auth';
 import { updatePhotoOrder } from '@/lib/cloudinary';
+import { albumExists } from '@/lib/album-config';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const requestId = Math.random().toString(36).substr(2, 9);
-  
-  console.log(`[REORDER-${requestId}] 🔄 Reorder request started`);
+
+  // Get album slug from query parameters
+  const { searchParams } = new URL(request.url);
+  const albumSlug = searchParams.get('albumSlug');
+
+  console.log(`[REORDER-${requestId}] 🔄 Reorder request started for album: ${albumSlug || 'legacy'}`);
 
   try {
+    // Check if album exists (if albumSlug is provided)
+    if (albumSlug) {
+      console.log(`[REORDER-${requestId}] 📂 Checking if album exists...`);
+      if (!albumExists(albumSlug)) {
+        console.log(`[REORDER-${requestId}] ❌ Album not found: ${albumSlug}`);
+        return Response.json(
+          { error: 'Album not found' },
+          { status: 404 }
+        );
+      }
+    }
+
     // Check if user has admin privileges
     console.log(`[REORDER-${requestId}] 🔐 Checking admin authentication...`);
-    const isAdminUser = await isAdmin();
-    
+    const isAdminUser = albumSlug
+      ? await isAdminForAlbum(albumSlug)
+      : await isAdmin();
+
     if (!isAdminUser) {
       console.log(`[REORDER-${requestId}] ❌ Admin authentication failed`);
       return Response.json(
@@ -50,7 +69,7 @@ export async function POST(request: NextRequest) {
     const updateStartTime = Date.now();
     
     try {
-      const success = await updatePhotoOrder(orderUpdates);
+      const success = await updatePhotoOrder(orderUpdates, albumSlug || undefined);
       const updateTime = Date.now() - updateStartTime;
 
       if (!success) {
@@ -60,17 +79,18 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-      
+
       const totalTime = Date.now() - startTime;
       console.log(`[REORDER-${requestId}] ✅ Custom order updated successfully in ${totalTime}ms (update: ${updateTime}ms)`);
 
-      return Response.json({ 
+      return Response.json({
         success: true,
         metadata: {
           updatedCount: orderUpdates.length,
           updateTime,
           totalTime,
           requestId,
+          albumSlug: albumSlug || null,
         }
       });
     } catch (updateError) {

@@ -1,11 +1,27 @@
 import { NextRequest } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { isAdmin, isAdminForAlbum } from '@/lib/auth';
 import { deleteImages } from '@/lib/cloudinary';
+import { albumExists } from '@/lib/album-config';
 
 export async function POST(request: NextRequest) {
+  // Get album slug from query parameters
+  const { searchParams } = new URL(request.url);
+  const albumSlug = searchParams.get('albumSlug');
+
   try {
+    // Check if album exists (if albumSlug is provided)
+    if (albumSlug && !albumExists(albumSlug)) {
+      return Response.json(
+        { error: 'Album not found' },
+        { status: 404 }
+      );
+    }
+
     // Check if user is admin
-    const adminStatus = await isAdmin();
+    const adminStatus = albumSlug
+      ? await isAdminForAlbum(albumSlug)
+      : await isAdmin();
+
     if (!adminStatus) {
       return Response.json(
         { error: 'Unauthorized. Admin access required.' },
@@ -23,11 +39,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Admin deleting ${photoIds.length} photos:`, photoIds);
+    console.log(`Admin deleting ${photoIds.length} photos from album ${albumSlug || 'legacy'}:`, photoIds);
 
     // Delete photos from Cloudinary using bulk delete for better performance
     const result = await deleteImages(photoIds);
-    
+
     console.log(`Deletion complete: ${result.successful.length} successful, ${result.failed.length} failed`);
 
     return Response.json({
@@ -36,7 +52,8 @@ export async function POST(request: NextRequest) {
       failed: result.failed.length,
       successful: result.successful,
       failedIds: result.failed,
-      message: result.failed.length > 0 
+      albumSlug: albumSlug || null,
+      message: result.failed.length > 0
         ? `${result.successful.length} photos deleted successfully, ${result.failed.length} failed`
         : `${result.successful.length} photos deleted successfully`
     });
