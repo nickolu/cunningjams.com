@@ -16,12 +16,13 @@ import { CloudinaryImage } from '@/lib/cloudinary-client';
 
 interface HeaderProps {
   photos?: CloudinaryImage[];
+  albumSlug?: string;
   onRefreshGallery?: () => void;
   secondaryContent?: ReactNode;
   inlineContent?: ReactNode;
 }
 
-export function Header({ photos = [], onRefreshGallery, secondaryContent, inlineContent }: HeaderProps) {
+export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryContent, inlineContent }: HeaderProps) {
   const router = useRouter();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
 
@@ -50,7 +51,7 @@ export function Header({ photos = [], onRefreshGallery, secondaryContent, inline
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-2 ml-auto">
-            <DirectUploadModal onUploadComplete={onRefreshGallery}>
+            <DirectUploadModal albumSlug={albumSlug} onUploadComplete={onRefreshGallery}>
               {({ open, isUploading }) => (
                 <Button
                   variant="outline"
@@ -114,7 +115,7 @@ export function Header({ photos = [], onRefreshGallery, secondaryContent, inline
       
       {/* Mobile Upload Modal - Outside of dropdown to prevent closing issues */}
       {mobileUploadModalOpen && (
-        <DirectUploadModal onUploadComplete={() => {
+        <DirectUploadModal albumSlug={albumSlug} onUploadComplete={() => {
           onRefreshGallery?.();
           setMobileUploadModalOpen(false);
         }}>

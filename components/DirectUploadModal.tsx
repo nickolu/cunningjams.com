@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { CldUploadWidget, CloudinaryUploadWidgetInfo, CloudinaryUploadWidgetResults } from 'next-cloudinary';
 import { toast } from 'sonner';
+import { getAlbumConfig } from '@/lib/album-config';
 
 interface DirectUploadModalProps {
+  albumSlug?: string;
   onUploadComplete?: () => void;
   children: (props: { open: () => void; isUploading: boolean }) => React.ReactNode;
 }
 
-export function DirectUploadModal({ onUploadComplete, children }: DirectUploadModalProps) {
+export function DirectUploadModal({ albumSlug, onUploadComplete, children }: DirectUploadModalProps) {
   const [isUploading, setIsUploading] = useState(false);
   
   // Get environment variables with fallbacks
@@ -20,6 +22,10 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
     console.error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set!');
     return null;
   }
+
+  // Get the cloudinary folder from album config
+  const albumConfig = albumSlug ? getAlbumConfig(albumSlug) : null;
+  const cloudinaryFolder = albumConfig?.cloudinaryFolder || 'default-uploads';
 
   const handleSuccess = (result: CloudinaryUploadWidgetResults) => {
     if (result.info && typeof result.info === 'object' && 'original_filename' in result.info) {
@@ -43,7 +49,7 @@ export function DirectUploadModal({ onUploadComplete, children }: DirectUploadMo
       options={{
         multiple: true,
         maxFiles: 500,
-        folder: '2025-steves-40th',
+        folder: cloudinaryFolder,
         resourceType: 'auto',
         clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'],
         maxFileSize: 100000000, // 100MB

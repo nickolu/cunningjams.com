@@ -619,7 +619,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
   if (loading) {
     return (
       <div>
-        <Header photos={[]} onRefreshGallery={fetchPhotos} />
+        <Header photos={[]} albumSlug={albumSlug} onRefreshGallery={fetchPhotos} />
         <div className="container mx-auto px-4 py-8">
           <LoadingGallery />
         </div>
@@ -630,7 +630,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
   if (photos.length === 0) {
     return (
       <div>
-        <Header photos={[]} onRefreshGallery={fetchPhotos} />
+        <Header photos={[]} albumSlug={albumSlug} onRefreshGallery={fetchPhotos} />
         <div className="container mx-auto px-4 py-8">
           <EmptyState albumConfig={albumConfig} />
         </div>
@@ -642,6 +642,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
     <div>
       <Header
         photos={photos}
+        albumSlug={albumSlug}
         onRefreshGallery={fetchPhotos}
         inlineContent={
           <SortControls
