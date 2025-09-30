@@ -19,9 +19,9 @@ export function PhotoComments({ photo, albumSlug }: PhotoCommentsProps) {
     : photo.public_id;
 
   // Create a URL for this photo (used by Disqus for tracking)
-  const url = typeof window !== 'undefined'
-    ? `${window.location.origin}/album/${albumSlug || 'default'}?photo=${encodeURIComponent(photo.public_id)}`
-    : '';
+  // Always use production URL to avoid localhost issues with Disqus
+  const productionUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cunningjams.com';
+  const url = `${productionUrl}/album/${albumSlug || 'default'}?photo=${encodeURIComponent(photo.public_id)}`;
 
   // Title for the comment thread
   const title = photo.original_filename || `Photo ${photo.public_id.split('/').pop()}`;

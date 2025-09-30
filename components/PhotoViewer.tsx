@@ -153,11 +153,13 @@ export function PhotoViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-16 z-20 text-white hover:bg-white/20 transition-all duration-200"
+            className={`absolute top-4 right-16 z-20 text-white transition-all duration-200 ${
+              showComments ? 'bg-white/30 hover:bg-white/40' : 'hover:bg-white/20'
+            }`}
             onClick={() => setShowComments(!showComments)}
             title={showComments ? "Hide comments" : "Show comments"}
           >
-            <MessageSquare className="w-6 h-6" />
+            <MessageSquare className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
           </Button>
 
           {/* Previous button */}
