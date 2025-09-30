@@ -164,7 +164,17 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
           const errorMessage = errorData.details || errorData.error || 'Failed to save order';
           throw new Error(errorMessage);
         }
+
+        const result = await response.json();
         setUnsavedChanges(false);
+
+        // Show success message with timing info
+        if (result.metadata?.totalTime) {
+          const timeInSeconds = (result.metadata.totalTime / 1000).toFixed(1);
+          toast.success(`Changes saved successfully (${timeInSeconds}s)`);
+        } else {
+          toast.success('Changes saved successfully');
+        }
       } catch (err) {
         if ((err as any)?.name === 'AbortError') {
           // Swallow aborts
@@ -464,6 +474,8 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
         throw new Error('Failed to set custom order');
       }
 
+      const result = await response.json();
+
       // Get sort label for toast message
       const sortLabels: Record<SortOption, string> = {
         custom: 'Custom Order',
@@ -474,9 +486,15 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
         'created-newest': 'Created Date (Newest)',
         'created-oldest': 'Created Date (Oldest)',
       };
-      
-      toast.success(`Current "${sortLabels[sortBy]}" order saved as custom order`);
-      
+
+      // Show success message with timing info
+      if (result.metadata?.totalTime) {
+        const timeInSeconds = (result.metadata.totalTime / 1000).toFixed(1);
+        toast.success(`Current "${sortLabels[sortBy]}" order saved as custom order (${timeInSeconds}s)`);
+      } else {
+        toast.success(`Current "${sortLabels[sortBy]}" order saved as custom order`);
+      }
+
       // Switch to custom sort to show the new order
       setSortBy('custom');
       fetchPhotos('custom');

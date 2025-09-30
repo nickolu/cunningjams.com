@@ -270,7 +270,7 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
   try {
     console.log(`🔄 Starting photo order update for ${orderUpdates.length} items`);
     console.log('Order updates:', orderUpdates.map(u => ({ id: u.currentPublicId, order: u.newOrder, key: u.newSortKey })));
-    
+
     // Check Cloudinary configuration
     const config = cloudinary.config();
     console.log('Cloudinary config check:', {
@@ -278,7 +278,7 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
       api_key: !!config.api_key,
       api_secret: !!config.api_secret
     });
-    
+
     // Get resource types by fetching all album photos and matching by public_id
     console.log('🔍 Fetching resource types from album photos...');
     const resourceTypes = new Map<string, string>();
@@ -294,24 +294,24 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
     } catch (searchError) {
       console.warn('⚠️ Failed to get album photos, falling back to individual resource calls:', searchError);
     }
-    
-    // Process in batches to avoid rate limiting
-    const BATCH_SIZE = 5;
+
+    // Process in larger batches with no delays - Cloudinary can handle ~500 req/s
+    const BATCH_SIZE = 30;
     const results: Array<{ success: boolean; publicId: string; result?: any; error?: string }> = [];
-    
+
     for (let i = 0; i < orderUpdates.length; i += BATCH_SIZE) {
       const batch = orderUpdates.slice(i, i + BATCH_SIZE);
       console.log(`🔄 Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderUpdates.length / BATCH_SIZE)} (${batch.length} items)`);
-      
+
       const batchPromises = batch.map(async ({ currentPublicId, newOrder, newSortKey }, batchIndex) => {
         const globalIndex = i + batchIndex;
         try {
           // Prefer provided sort key, else derive from index using default spacing
           const paddedOrder = newSortKey ?? toPaddedSortKeyFromIndex(newOrder ?? 0);
-          
+
           // Get resource type from our album photos or fallback to individual call
           let resourceType = resourceTypes.get(currentPublicId);
-          
+
           if (!resourceType) {
             // Fallback: try individual resource call
             try {
@@ -322,14 +322,14 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
               resourceType = 'image';
             }
           }
-          
+
           console.log(`📝 [${globalIndex + 1}/${orderUpdates.length}] Setting sort_order=${paddedOrder} for ${currentPublicId} (${resourceType})`);
-          
+
           let result;
           if (resourceType === 'video') {
             // For videos, try multiple approaches
             console.log(`🎥 Attempting to update video: ${currentPublicId}`);
-            
+
             // First try: use explicit API to update context
             try {
               result = await cloudinary.uploader.explicit(currentPublicId, {
@@ -340,14 +340,14 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
               console.log(`✅ Video context update successful via explicit API`);
             } catch (explicitError) {
               console.warn(`⚠️ Explicit API failed, trying tags:`, explicitError);
-              
+
               // Fallback: try tags
               try {
                 result = await cloudinary.uploader.add_tag(`sort_order_${paddedOrder}`, [currentPublicId]);
                 console.log(`✅ Video tag update successful`);
               } catch (tagError) {
                 console.warn(`⚠️ Tag API also failed, trying context:`, tagError);
-                
+
                 // Last resort: try context anyway
                 result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
                 console.log(`✅ Video context update successful via context API`);
@@ -358,13 +358,13 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
             console.log(`🖼️ Using context for image: ${currentPublicId}`);
             result = await cloudinary.uploader.add_context(`sort_order=${paddedOrder}`, [currentPublicId]);
           }
-          
+
           // Verify the update was successful
           // Different APIs return different response formats
-          const isSuccess = (result && result.public_ids && result.public_ids.length > 0) || 
+          const isSuccess = (result && result.public_ids && result.public_ids.length > 0) ||
                            (result && result.public_id && result.context?.custom?.sort_order) ||
                            (result && result.public_id && result.context?.sort_order);
-          
+
           if (isSuccess) {
             console.log(`✅ [${globalIndex + 1}/${orderUpdates.length}] Update successful for ${currentPublicId} (${resourceType})`);
             return { success: true, publicId: currentPublicId, result };
@@ -380,23 +380,20 @@ export async function updatePhotoOrder(orderUpdates: { currentPublicId: string; 
 
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
-      
-      // Add a small delay between batches to avoid rate limiting
-      if (i + BATCH_SIZE < orderUpdates.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+
+      // No delay needed - Cloudinary can handle the throughput
     }
-    
+
     const successful = results.filter(r => r.success);
     const failed = results.filter(r => !r.success);
-    
+
     console.log(`📊 Update results: ${successful.length} successful, ${failed.length} failed`);
-    
+
     if (failed.length > 0) {
       console.error('❌ Failed updates:', failed);
       throw new Error(`Failed to update ${failed.length} out of ${orderUpdates.length} items`);
     }
-    
+
     console.log('✅ All updates completed successfully');
     return true;
   } catch (error) {
