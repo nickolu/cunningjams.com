@@ -19,10 +19,10 @@ function formatDuration(seconds?: number): string {
 export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   const isVideo = photo.resource_type === 'video';
   const [thumbnailError, setThumbnailError] = useState(false);
-  
+
   // For videos, use Cloudinary's auto-generated thumbnail
-  const thumbnailUrl = isVideo 
-    ? getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'jpg', quality: 'auto', crop: 'fill' })
+  const thumbnailUrl = isVideo
+    ? getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'jpg', quality: 'auto', crop: 'fill', resourceType: 'video' })
     : getOptimizedImageUrl(photo.public_id, { width: 400, height: 400, format: 'auto', quality: 'auto', crop: 'fill' });
 
   const handleThumbnailError = () => {

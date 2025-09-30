@@ -29,6 +29,7 @@ export function getOptimizedImageUrl(
     quality?: string | number;
     format?: string;
     crop?: string;
+    resourceType?: 'image' | 'video';
   } = {}
 ): string {
   const {
@@ -37,18 +38,19 @@ export function getOptimizedImageUrl(
     quality = 'auto',
     format = 'auto',
     crop = 'fill',
+    resourceType = 'image',
   } = options;
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo';
   let transformation = `q_${quality},f_${format}`;
-  
+
   if (width || height) {
     transformation += `,c_${crop}`;
     if (width) transformation += `,w_${width}`;
     if (height) transformation += `,h_${height}`;
   }
 
-  return `https://res.cloudinary.com/${cloudName}/image/upload/${transformation}/${publicId}`;
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${transformation}/${publicId}`;
 }
 
 /**
