@@ -1,10 +1,11 @@
 import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { PhotoComments } from '@/components/PhotoComments';
 
 interface PhotoViewerProps {
   photo: CloudinaryImage;
@@ -14,6 +15,7 @@ interface PhotoViewerProps {
   onNext?: () => void;
   currentIndex: number;
   totalCount: number;
+  albumSlug?: string;
 }
 
 export function PhotoViewer({
@@ -24,8 +26,10 @@ export function PhotoViewer({
   onNext,
   currentIndex,
   totalCount,
+  albumSlug,
 }: PhotoViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showComments, setShowComments] = useState(false);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -109,16 +113,19 @@ export function PhotoViewer({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-none max-h-none w-screen h-screen p-0 bg-black border-none m-0 rounded-none">
+      <DialogContent className="max-w-none max-h-none w-screen h-screen p-0 bg-black border-none m-0 rounded-none overflow-hidden">
         <VisuallyHidden>
           <DialogTitle>
             Photo {currentIndex + 1} of {totalCount}
             {photo.original_filename && ` - ${photo.original_filename}`}
           </DialogTitle>
         </VisuallyHidden>
-        <div 
+        <div
           ref={containerRef}
-          className="relative w-full h-full flex items-center justify-center"
+          className="relative w-full h-full flex flex-col"
+        >
+          {/* Main photo viewer area */}
+          <div className="relative flex-1 flex items-center justify-center"
         >
           {/* Close button */}
           <Button
@@ -135,11 +142,22 @@ export function PhotoViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-16 z-20 text-white hover:bg-white/20 transition-all duration-200"
+            className="absolute top-4 right-28 z-20 text-white hover:bg-white/20 transition-all duration-200"
             onClick={handleDownload}
             title="Download image"
           >
             <Download className="w-6 h-6" />
+          </Button>
+
+          {/* Comments toggle button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-16 z-20 text-white hover:bg-white/20 transition-all duration-200"
+            onClick={() => setShowComments(!showComments)}
+            title={showComments ? "Hide comments" : "Show comments"}
+          >
+            <MessageSquare className="w-6 h-6" />
           </Button>
 
           {/* Previous button */}
@@ -213,6 +231,16 @@ export function PhotoViewer({
               </p>
             )}
           </div>
+          </div>
+
+          {/* Comments panel */}
+          {showComments && (
+            <div className="w-full h-1/2 bg-white overflow-y-auto border-t border-gray-200">
+              <div className="max-w-4xl mx-auto p-4">
+                <PhotoComments photo={photo} albumSlug={albumSlug} />
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -773,6 +773,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
           onNext={selectedIndex < photos.length - 1 ? handleNext : undefined}
           currentIndex={selectedIndex}
           totalCount={photos.length}
+          albumSlug={albumSlug}
         />
       )}
 
