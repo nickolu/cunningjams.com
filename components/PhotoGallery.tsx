@@ -756,6 +756,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
                     isDragEnabled={sortBy === 'custom' && isAdmin && !isProcessingOrder}
                     isMultiSelectMode={isMultiSelectMode}
                     isSelected={selectedPhotoIds.has(photo.public_id)}
+                    albumSlug={albumSlug}
                   />
                 ))}
               </div>

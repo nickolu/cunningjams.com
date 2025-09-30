@@ -1,12 +1,14 @@
 import { CloudinaryImage, getOptimizedImageUrl } from '@/lib/cloudinary-client';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import { Play, Clock, Video } from 'lucide-react';
+import { Play, Clock, Video, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import { CommentCount } from 'disqus-react';
 
 interface PhotoCardProps {
   photo: CloudinaryImage;
   onClick: (event?: React.MouseEvent) => void;
+  albumSlug?: string;
 }
 
 function formatDuration(seconds?: number): string {
@@ -16,7 +18,7 @@ function formatDuration(seconds?: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function PhotoCard({ photo, onClick }: PhotoCardProps) {
+export function PhotoCard({ photo, onClick, albumSlug }: PhotoCardProps) {
   const isVideo = photo.resource_type === 'video';
   const [thumbnailError, setThumbnailError] = useState(false);
 
@@ -30,6 +32,15 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
       setThumbnailError(true);
     }
   };
+
+  // Disqus configuration
+  const disqusShortname = process.env.NEXT_PUBLIC_DISQUS_SHORTNAME || 'your-site';
+  const productionUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cunningjams.com';
+  const identifier = albumSlug
+    ? `${albumSlug}/${photo.public_id}`
+    : photo.public_id;
+  const url = `${productionUrl}/album/${albumSlug || 'default'}?photo=${encodeURIComponent(photo.public_id)}`;
+  const title = photo.original_filename || `Photo ${photo.public_id.split('/').pop()}`;
 
   return (
     <Card 
@@ -76,6 +87,21 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
             )}
           </>
         )}
+
+        {/* Comment count badge */}
+        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+          <MessageSquare className="w-3 h-3" />
+          <CommentCount
+            shortname={disqusShortname}
+            config={{
+              url,
+              identifier,
+              title,
+            }}
+          >
+            0
+          </CommentCount>
+        </div>
       </div>
     </Card>
   );

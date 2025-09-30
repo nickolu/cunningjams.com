@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useEffect, useRef, useState } from 'react';
 import { PhotoComments } from '@/components/PhotoComments';
+import { CommentCount } from 'disqus-react';
 
 interface PhotoViewerProps {
   photo: CloudinaryImage;
@@ -30,6 +31,15 @@ export function PhotoViewer({
 }: PhotoViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showComments, setShowComments] = useState(false);
+
+  // Disqus configuration
+  const disqusShortname = process.env.NEXT_PUBLIC_DISQUS_SHORTNAME || 'your-site';
+  const productionUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cunningjams.com';
+  const identifier = albumSlug
+    ? `${albumSlug}/${photo.public_id}`
+    : photo.public_id;
+  const url = `${productionUrl}/album/${albumSlug || 'default'}?photo=${encodeURIComponent(photo.public_id)}`;
+  const title = photo.original_filename || `Photo ${photo.public_id.split('/').pop()}`;
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -159,7 +169,21 @@ export function PhotoViewer({
             onClick={() => setShowComments(!showComments)}
             title={showComments ? "Hide comments" : "Show comments"}
           >
-            <MessageSquare className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
+            <div className="relative">
+              <MessageSquare className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
+              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <CommentCount
+                  shortname={disqusShortname}
+                  config={{
+                    url,
+                    identifier,
+                    title,
+                  }}
+                >
+                  0
+                </CommentCount>
+              </div>
+            </div>
           </Button>
 
           {/* Previous button */}
