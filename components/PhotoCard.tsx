@@ -36,9 +36,7 @@ export function PhotoCard({ photo, onClick, albumSlug }: PhotoCardProps) {
   // Disqus configuration
   const disqusShortname = process.env.NEXT_PUBLIC_DISQUS_SHORTNAME || 'your-site';
   const productionUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cunningjams.com';
-  const identifier = albumSlug
-    ? `${albumSlug}/${photo.public_id}`
-    : photo.public_id;
+  const identifier = photo.public_id;
   const url = `${productionUrl}/album/${albumSlug || 'default'}?photo=${encodeURIComponent(photo.public_id)}`;
   const title = photo.original_filename || `Photo ${photo.public_id.split('/').pop()}`;
 
