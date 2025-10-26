@@ -58,6 +58,13 @@ const albumConfigs: AlbumConfigs = {
     cloudinaryFolder: "manchat",
     password: process.env.MANCHAT_ALBUM_PASSWORD || "1234",
     adminPassword: process.env.MANCHAT_ADMIN_PASSWORD || "manchat-admin"
+  },
+  "2025-lemon-ave-fall-carnival": {
+    title: "2025 Lemon Ave Fall Carnival",
+    subtitle: "2025 Lemon Ave Fall Carnival",
+    cloudinaryFolder: "2025-lemon-ave-fall-carnival",
+    password: process.env.LEMON_AVE_FALL_CARNIVAL_ALBUM_PASSWORD || "1234",
+    adminPassword: process.env.LEMON_AVE_FALL_CARNIVAL_ADMIN_PASSWORD || "2025-lemon-ave-fall-carnival-admin"
   }
 };
 

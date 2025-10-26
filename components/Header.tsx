@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { Upload, Menu, LogOut } from 'lucide-react';
 import { DirectUploadModal } from '@/components/DirectUploadModal';
@@ -25,6 +28,7 @@ interface HeaderProps {
 export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryContent, inlineContent }: HeaderProps) {
   const router = useRouter();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
+  const [sequentialUpload, setSequentialUpload] = useState(true);
 
   const handleLogout = async () => {
     try {
@@ -51,18 +55,45 @@ export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryCont
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-2 ml-auto">
-            <DirectUploadModal albumSlug={albumSlug} onUploadComplete={onRefreshGallery}>
+            <DirectUploadModal 
+              albumSlug={albumSlug} 
+              onUploadComplete={onRefreshGallery}
+              sequentialUpload={sequentialUpload}
+            >
               {({ open, isUploading }) => (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={open}
-                  disabled={isUploading}
-                  className="flex items-center space-x-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Photos</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center space-x-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>Upload Photos</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={open} disabled={isUploading}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isUploading ? 'Uploading...' : 'Choose Photos'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                      Upload Settings
+                    </DropdownMenuLabel>
+                    <DropdownMenuCheckboxItem
+                      checked={sequentialUpload}
+                      onCheckedChange={setSequentialUpload}
+                    >
+                      <div className="flex flex-col">
+                        <span>Sort by Filename</span>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {sequentialUpload ? 'Ordered alphabetically' : 'Ordered by upload time'}
+                        </span>
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </DirectUploadModal>
             
@@ -87,11 +118,27 @@ export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryCont
                   <Menu className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => setMobileUploadModalOpen(true)}>
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Photos
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                  Upload Settings
+                </DropdownMenuLabel>
+                <DropdownMenuCheckboxItem
+                  checked={sequentialUpload}
+                  onCheckedChange={setSequentialUpload}
+                >
+                  <div className="flex flex-col">
+                    <span>Sort by Filename</span>
+                    <span className="text-xs text-muted-foreground font-normal">
+                      {sequentialUpload ? 'Ordered alphabetically' : 'Ordered by upload time'}
+                    </span>
+                  </div>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
                 <div className="px-2 py-1">
                   <DownloadButton photos={photos} variant="ghost" size="sm" className="w-full justify-start" />
                 </div>
@@ -115,10 +162,14 @@ export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryCont
       
       {/* Mobile Upload Modal - Outside of dropdown to prevent closing issues */}
       {mobileUploadModalOpen && (
-        <DirectUploadModal albumSlug={albumSlug} onUploadComplete={() => {
-          onRefreshGallery?.();
-          setMobileUploadModalOpen(false);
-        }}>
+        <DirectUploadModal 
+          albumSlug={albumSlug} 
+          sequentialUpload={sequentialUpload}
+          onUploadComplete={() => {
+            onRefreshGallery?.();
+            setMobileUploadModalOpen(false);
+          }}
+        >
           {({ open, isUploading }) => {
             // Auto-open when modal becomes active
             if (mobileUploadModalOpen && !isUploading) {

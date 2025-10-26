@@ -37,15 +37,17 @@ export function DeleteConfirmationModal({
             <AlertTriangle className="w-5 h-5" />
             Delete Photos
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              Are you sure you want to delete{' '}
-              <strong>{photoCount} photo{photoCount !== 1 ? 's' : ''}</strong>?
-            </p>
-            <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-              <strong>⚠️ This action cannot be undone.</strong><br />
-              The photos will be permanently removed from Cloudinary and cannot be recovered.
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              <div>
+                Are you sure you want to delete{' '}
+                <strong>{photoCount} photo{photoCount !== 1 ? 's' : ''}</strong>?
+              </div>
+              <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                <strong>⚠️ This action cannot be undone.</strong><br />
+                The photos will be permanently removed from Cloudinary and cannot be recovered.
+              </div>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
