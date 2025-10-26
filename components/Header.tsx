@@ -29,7 +29,7 @@ export function Header({ photos = [], albumSlug, onRefreshGallery, secondaryCont
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/auth/album/password');
+      router.push(albumSlug ? `/auth/albums/${albumSlug}/password` : '/auth/album/password');
       router.refresh();
     } catch (error) {
       console.error('Logout error:', error);
