@@ -80,10 +80,16 @@ export function getAlbumConfig(albumSlug: string): AlbumConfig | null {
       subtitle: "2025",
       cloudinaryFolder: albumSlug,
       password: "pumphouse",
-      adminPassword: "admin2025"
+      adminPassword: "admin2025",
+      commentsEnabled: false
     }
   }
-  return configs[albumSlug] || null;
+  // Return the config with commentsEnabled defaulting to false if not specified
+  const config = configs[albumSlug];
+  return {
+    ...config,
+    commentsEnabled: config.commentsEnabled ?? false
+  };
 }
 
 export function validateAlbumPassword(albumSlug: string, password: string): { authenticated: boolean; isAdmin: boolean } {

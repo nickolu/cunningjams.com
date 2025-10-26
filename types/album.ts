@@ -4,6 +4,7 @@ export interface AlbumConfig {
   cloudinaryFolder: string;
   password: string;
   adminPassword: string;
+  commentsEnabled?: boolean;
 }
 
 export interface AlbumSession {

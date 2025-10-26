@@ -256,7 +256,8 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
         subtitle: "Colorado Trip 2025",
         cloudinaryFolder: "2025-steves-40th",
         password: "pumphouse",
-        adminPassword: "admin2025"
+        adminPassword: "admin2025",
+        commentsEnabled: false
       });
     }
   }, [albumSlug]);
@@ -757,6 +758,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
                     isMultiSelectMode={isMultiSelectMode}
                     isSelected={selectedPhotoIds.has(photo.public_id)}
                     albumSlug={albumSlug}
+                    commentsEnabled={albumConfig?.commentsEnabled ?? false}
                   />
                 ))}
               </div>
@@ -775,6 +777,7 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
           currentIndex={selectedIndex}
           totalCount={photos.length}
           albumSlug={albumSlug}
+          commentsEnabled={albumConfig?.commentsEnabled ?? false}
         />
       )}
 

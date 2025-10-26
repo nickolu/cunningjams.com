@@ -9,6 +9,7 @@ interface PhotoCardProps {
   photo: CloudinaryImage;
   onClick: (event?: React.MouseEvent) => void;
   albumSlug?: string;
+  commentsEnabled?: boolean;
 }
 
 function formatDuration(seconds?: number): string {
@@ -18,7 +19,7 @@ function formatDuration(seconds?: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function PhotoCard({ photo, onClick, albumSlug }: PhotoCardProps) {
+export function PhotoCard({ photo, onClick, albumSlug, commentsEnabled = false }: PhotoCardProps) {
   const isVideo = photo.resource_type === 'video';
   const [thumbnailError, setThumbnailError] = useState(false);
 
@@ -87,19 +88,21 @@ export function PhotoCard({ photo, onClick, albumSlug }: PhotoCardProps) {
         )}
 
         {/* Comment count badge */}
-        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
-          <MessageSquare className="w-3 h-3" />
-          <CommentCount
-            shortname={disqusShortname}
-            config={{
-              url,
-              identifier,
-              title,
-            }}
-          >
-            0
-          </CommentCount>
-        </div>
+        {commentsEnabled && (
+          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center space-x-1">
+            <MessageSquare className="w-3 h-3" />
+            <CommentCount
+              shortname={disqusShortname}
+              config={{
+                url,
+                identifier,
+                title,
+              }}
+            >
+              0
+            </CommentCount>
+          </div>
+        )}
       </div>
     </Card>
   );

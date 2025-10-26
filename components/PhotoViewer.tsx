@@ -17,6 +17,7 @@ interface PhotoViewerProps {
   currentIndex: number;
   totalCount: number;
   albumSlug?: string;
+  commentsEnabled?: boolean;
 }
 
 export function PhotoViewer({
@@ -28,6 +29,7 @@ export function PhotoViewer({
   currentIndex,
   totalCount,
   albumSlug,
+  commentsEnabled = false,
 }: PhotoViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showComments, setShowComments] = useState(false);
@@ -150,7 +152,7 @@ export function PhotoViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-28 z-20 text-white hover:bg-white/20 transition-all duration-200"
+            className={`absolute top-4 ${commentsEnabled ? 'right-28' : 'right-16'} z-20 text-white hover:bg-white/20 transition-all duration-200`}
             onClick={handleDownload}
             title="Download image"
           >
@@ -158,31 +160,33 @@ export function PhotoViewer({
           </Button>
 
           {/* Comments toggle button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`absolute top-4 right-16 z-20 text-white transition-all duration-200 ${
-              showComments ? 'bg-white/30 hover:bg-white/40' : 'hover:bg-white/20'
-            }`}
-            onClick={() => setShowComments(!showComments)}
-            title={showComments ? "Hide comments" : "Show comments"}
-          >
-            <div className="relative">
-              <MessageSquare className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
-              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                <CommentCount
-                  shortname={disqusShortname}
-                  config={{
-                    url,
-                    identifier,
-                    title,
-                  }}
-                >
-                  0
-                </CommentCount>
+          {commentsEnabled && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`absolute top-4 right-16 z-20 text-white transition-all duration-200 ${
+                showComments ? 'bg-white/30 hover:bg-white/40' : 'hover:bg-white/20'
+              }`}
+              onClick={() => setShowComments(!showComments)}
+              title={showComments ? "Hide comments" : "Show comments"}
+            >
+              <div className="relative">
+                <MessageSquare className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
+                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  <CommentCount
+                    shortname={disqusShortname}
+                    config={{
+                      url,
+                      identifier,
+                      title,
+                    }}
+                  >
+                    0
+                  </CommentCount>
+                </div>
               </div>
-            </div>
-          </Button>
+            </Button>
+          )}
 
           {/* Previous button */}
           {onPrevious && (
@@ -258,7 +262,7 @@ export function PhotoViewer({
           </div>
 
           {/* Comments panel */}
-          {showComments && (
+          {commentsEnabled && showComments && (
             <div className="w-full h-1/2 bg-white overflow-y-auto border-t border-gray-200">
               <div className="max-w-4xl mx-auto p-4">
                 <PhotoComments photo={photo} albumSlug={albumSlug} />

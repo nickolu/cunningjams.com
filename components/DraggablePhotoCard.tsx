@@ -14,6 +14,7 @@ interface DraggablePhotoCardProps {
   isMultiSelectMode?: boolean;
   isSelected?: boolean;
   albumSlug?: string;
+  commentsEnabled?: boolean;
 }
 
 export function DraggablePhotoCard({
@@ -23,7 +24,8 @@ export function DraggablePhotoCard({
   isDragEnabled,
   isMultiSelectMode = false,
   isSelected = false,
-  albumSlug
+  albumSlug,
+  commentsEnabled = false
 }: DraggablePhotoCardProps) {
   const {
     attributes,
@@ -50,7 +52,7 @@ export function DraggablePhotoCard({
     // Regular photo card for non-admin users or when no admin features are enabled
     return (
       <div ref={setNodeRef} style={style}>
-        <PhotoCard photo={photo} onClick={(e) => onClick(e)} albumSlug={albumSlug} />
+        <PhotoCard photo={photo} onClick={(e) => onClick(e)} albumSlug={albumSlug} commentsEnabled={commentsEnabled} />
       </div>
     );
   }
@@ -94,7 +96,7 @@ export function DraggablePhotoCard({
       )}
       
       <div className={showSelectionUI ? 'cursor-pointer' : ''}>
-        <PhotoCard photo={photo} onClick={(e) => onClick(e)} albumSlug={albumSlug} />
+        <PhotoCard photo={photo} onClick={(e) => onClick(e)} albumSlug={albumSlug} commentsEnabled={commentsEnabled} />
       </div>
     </div>
   );
