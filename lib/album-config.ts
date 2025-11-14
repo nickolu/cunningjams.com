@@ -65,6 +65,13 @@ const albumConfigs: AlbumConfigs = {
     cloudinaryFolder: "2025-lemon-ave-fall-carnival",
     password: process.env.LEMON_AVE_FALL_CARNIVAL_ALBUM_PASSWORD || "1234",
     adminPassword: process.env.LEMON_AVE_FALL_CARNIVAL_ADMIN_PASSWORD || "2025-lemon-ave-fall-carnival-admin"
+  },
+  "vinhs-40th": {
+    title: "Vinh's 40th Birthday",
+    subtitle: "Vinh's 40th Birthday",
+    cloudinaryFolder: "vinhs-40th",
+    password: process.env.VINHS_40TH_ALBUM_PASSWORD || "1234",
+    adminPassword: process.env.VINHS_40TH_ADMIN_PASSWORD || "vinhs-40th-admin"
   }
 };
 
