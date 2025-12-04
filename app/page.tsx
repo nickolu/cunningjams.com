@@ -59,56 +59,133 @@ export default function AvantGardePortfolio() {
   const projects = [
     {
       id: 1,
-      title: "BRUTALIST",
-      subtitle: "Web Design",
-      year: "2023",
-      description: "Experimental e-commerce platform with unconventional navigation and typography-focused design.",
+      title: "CUNNINGTYPE",
+      subtitle: "Typing Training Application",
+      year: "2024",
+      description: "An intelligent typing trainer that uses AI to identify and target your weakest patterns.",
       fullDescription:
-        "A groundbreaking e-commerce platform that challenges traditional web design conventions. Built with React and Three.js, this project features unconventional navigation patterns, experimental typography, and immersive 3D elements that create a unique shopping experience.",
-      technologies: ["React", "Three.js", "WebGL", "Node.js", "MongoDB"],
-      images: ["/placeholder.svg?height=600&width=800", "/placeholder.svg?height=400&width=600"],
-      liveUrl: "https://brutalist-demo.com",
-      githubUrl: "https://github.com/alexdev/brutalist",
+        "A comprehensive typing skills development platform that goes beyond traditional typing tests. Cunningtype intelligently analyzes your typing patterns to identify specific weaknesses, then leverages AI to generate custom training content that targets those exact areas. The result is a highly personalized training experience that accelerates improvement where you need it most.",
+      technologies: ["React", "Next.js", "OpenAI API", "TypeScript", "Tailwind CSS"],
+      images: ["/projects/cunningtype.png"],
+      liveUrl: "https://cunningtype.com",
+      githubUrl: "https://github.com/nickolu/typing-trainer",
     },
     {
       id: 2,
-      title: "MONOCHROME",
-      subtitle: "Brand Identity",
-      year: "2022",
-      description:
-        "Minimalist brand identity system for a contemporary art gallery focused on black and white photography.",
+      title: "AIBRARIAN",
+      subtitle: "AI-Powered Book Recommendations",
+      year: "2024",
+      description: "Find the perfect book to solve your specific problems with AI-guided recommendations.",
       fullDescription:
-        "A comprehensive brand identity system for a contemporary art gallery specializing in black and white photography. The project includes logo design, typography system, exhibition materials, and a custom website that reflects the gallery's minimalist aesthetic.",
-      technologies: ["Next.js", "Framer Motion", "Tailwind CSS", "Figma"],
-      images: ["/placeholder.svg?height=600&width=800", "/placeholder.svg?height=400&width=600"],
-      liveUrl: "https://monochrome-gallery.com",
-      githubUrl: "https://github.com/alexdev/monochrome",
+        "AIbrarian revolutionizes how we discover books by matching specific problems or questions with relevant book recommendations. Instead of browsing by genre or popularity, users can describe a challenge they're facing, and the AI will recommend books that address that exact issue, complete with specific insights and passages from those books that provide solutions.",
+      technologies: ["Next.js", "OpenAI API", "React", "TypeScript"],
+      images: ["/projects/aibrarian.png"],
+      liveUrl: "https://aibrarian.com",
+      githubUrl: "https://github.com/nickolu/aibrarian.com",
     },
     {
       id: 3,
-      title: "FRAGMENT",
-      subtitle: "Interactive Experience",
-      year: "2023",
-      description: "WebGL-based interactive experience exploring the concept of digital fragmentation.",
+      title: "COMETCAVE",
+      subtitle: "Experimental AI Playground",
+      year: "2024",
+      description: "A creative sandbox for AI-powered experiments and entertaining digital experiences.",
       fullDescription:
-        "An experimental WebGL-based interactive experience that explores themes of digital fragmentation and data visualization. Users can manipulate 3D fragments in real-time, creating unique compositions while exploring the relationship between digital and physical space.",
-      technologies: ["WebGL", "GLSL", "JavaScript", "Canvas API"],
-      images: ["/placeholder.svg?height=600&width=800", "/placeholder.svg?height=400&width=600"],
-      liveUrl: "https://fragment-experience.com",
-      githubUrl: "https://github.com/alexdev/fragment",
+        "CometCave serves as a personal laboratory for exploring the creative possibilities of AI. This collection of experimental projects showcases various AI capabilities through entertaining and sometimes whimsical applications. Each project pushes the boundaries of what's possible when combining artificial intelligence with creative web development.",
+      technologies: ["Next.js", "OpenAI API", "React", "TypeScript", "Tailwind CSS"],
+      images: ["/projects/cometcave.png"],
+      liveUrl: "https://cometcave.com",
+      githubUrl: "https://github.com/nickolu/CometCave",
     },
     {
       id: 4,
-      title: "NEURAL",
-      subtitle: "AI Interface",
+      title: "WHOWOULDWIN-INATOR",
+      subtitle: "AI Battle Scenario Generator",
       year: "2024",
-      description: "Machine learning interface for creative AI applications with real-time visualization.",
+      description: "Generate epic battle scenarios and artwork between any two characters using multi-step AI workflows.",
       fullDescription:
-        "A sophisticated interface for creative AI applications featuring real-time neural network visualization, interactive parameter controls, and seamless integration with various machine learning models. The project bridges the gap between complex AI systems and intuitive user interaction.",
-      technologies: ["Python", "TensorFlow", "React", "D3.js", "WebSockets"],
-      images: ["/placeholder.svg?height=600&width=800", "/placeholder.svg?height=400&width=600"],
-      liveUrl: "https://neural-interface.com",
-      githubUrl: "https://github.com/alexdev/neural",
+        "An sophisticated agentic workflow that orchestrates multiple AI models to create entertaining battle scenarios complete with custom artwork. The system features 'progressive safety retries' - a novel approach that enables the generation of images featuring copyrighted characters while respecting content policies. Users can pit any two characters against each other and receive detailed battle narratives alongside unique artwork depicting the confrontation.",
+      technologies: ["Next.js", "OpenAI API", "DALL-E", "React", "Agentic Workflows"],
+      images: ["/projects/whowouldwininator.png"],
+      liveUrl: "https://www.cometcave.com/whowouldwininator",
+      githubUrl: "https://github.com/nickolu/CometCave/tree/main/src/app/whowouldwininator",
+    },
+    {
+      id: 5,
+      title: "THEOSIS",
+      subtitle: "Band Website Design",
+      year: "2024",
+      description: "A visually stunning website created for the band Theosis over a weekend creative sprint.",
+      fullDescription:
+        "A passion project born from a desire to give back to the music community through exceptional web design. Challenging myself to create the best possible website over a single weekend, this project combines artistic expression with modern web capabilities. The site features custom artwork and interactive elements that capture the band's aesthetic and energy.",
+      technologies: ["Next.js", "React", "Framer Motion", "Tailwind CSS"],
+      images: ["/projects/theosis.png"],
+      liveUrl: "https://theosis-website.vercel.app/",
+      githubUrl: "https://github.com/nickolu/theosis-website",
+    },
+    {
+      id: 6,
+      title: "INFINITE PERSONAS",
+      subtitle: "Educational AI Chat Platform",
+      year: "2023",
+      description: "Chat with historical figures and anyone else through AI, built with pioneering safety features.",
+      fullDescription:
+        "Created for my children to safely explore conversations with historical figures and other personas. This project implemented primitive but effective agent-based safety measures before they became widely understood - including faithfulness monitoring, content safety checks, and prompt injection protection, all built using the GPT-3.5 API. The system ensures conversations remain educational and appropriate while maintaining engaging character interactions.",
+      technologies: ["Next.js", "OpenAI API", "React", "Safety Agents", "TypeScript"],
+      images: ["/projects/infinitepersonas.png"],
+      liveUrl: "https://www.infinitepersonas.com/",
+      githubUrl: "https://github.com/nickolu/InfinitePersonas",
+    },
+    {
+      id: 7,
+      title: "CUNNINGJAMS ALBUMS",
+      subtitle: "Photo Gallery Web Application",
+      year: "2024",
+      description: "A feature-rich photo gallery powered by Cloudinary with multi-album support.",
+      fullDescription:
+        "A sophisticated photo gallery application built with the Cloudinary API, featuring password-protected albums, image optimization, and a sleek viewing experience. The system supports multiple configurable albums, each with its own settings and access controls. Perfect for sharing photo collections with family and friends while maintaining privacy and organization.",
+      technologies: ["Next.js", "Cloudinary API", "React", "TypeScript", "Tailwind CSS"],
+      images: ["/projects/cunningjams-albums.png"],
+      liveUrl: "https://www.cunningjams.com/albums/whowouldwininator-portraits",
+      githubUrl: "https://github.com/nickolu/cunningjams.com",
+    },
+    {
+      id: 8,
+      title: "CUNNINGBOT",
+      subtitle: "Multi-Purpose Discord Bot",
+      year: "2024",
+      description: "A feature-rich Discord bot running on Raspberry Pi with LLM and image generation capabilities.",
+      fullDescription:
+        "A comprehensive Discord bot hosted on a Raspberry Pi, providing server members with access to multiple LLM APIs, image generation capabilities, and custom features including a baseball statistics MCP built with public baseball data. The bot serves as a personal assistant and entertainment hub for Discord communities, demonstrating how consumer hardware can power sophisticated AI applications.",
+      technologies: ["Python", "Discord.js", "OpenAI API", "MCP", "Raspberry Pi"],
+      images: ["/projects/cunningbot.png"],
+      liveUrl: "https://discord.gg/3rdjDvxFEe",
+      githubUrl: "https://github.com/nickolu/cunningbot",
+    },
+    {
+      id: 9,
+      title: "TREEMIND",
+      subtitle: "AI-Enhanced Mind Mapping",
+      year: "2024",
+      description: "A mind mapping tool that uses AI to generate subtrees and supercharge brainstorming sessions.",
+      fullDescription:
+        "TreeMind transforms traditional mind mapping by integrating AI-powered subtree generation. As you build your mind map, the AI can suggest and generate entire branches of related ideas, helping overcome creative blocks and explore concepts more deeply. While still in development, it demonstrates the potential of AI to enhance human creativity rather than replace it.",
+      technologies: ["React", "OpenAI API", "TypeScript", "D3.js"],
+      images: ["/projects/treemind-renamed.png"],
+      liveUrl: "https://treemind.cunningjams.com/",
+      githubUrl: "https://github.com/nickolu/treemind",
+    },
+    {
+      id: 10,
+      title: "GPT FILE RENAMER",
+      subtitle: "Intelligent Batch File Renaming",
+      year: "2023",
+      description: "Leverage AI to rename thousands of files when traditional regex and string matching fall short.",
+      fullDescription:
+        "Born from the practical need to rename thousands of ROM files with inconsistent naming patterns, this tool harnesses GPT's natural language understanding to intelligently rename files in ways that traditional programming approaches cannot. When dealing with messy, inconsistent filenames that defy regex patterns, GPT File Renamer can understand context and make intelligent renaming decisions at scale.",
+      technologies: ["Python", "OpenAI API", "CLI"],
+      images: ["/projects/gpt-file-renamer.png"],
+      liveUrl: "",
+      githubUrl: "https://github.com/nickolu/gpt-file-renamer",
     },
   ]
 
@@ -212,7 +289,7 @@ export default function AvantGardePortfolio() {
         className="fixed inset-0 bg-black z-40 flex items-center justify-center"
       >
         <ul className="space-y-8 text-center">
-          {["HOME", /*"WORK",*/ "ABOUT", "CONTACT"].map((item, index) => (
+          {["HOME", "WORK", "ABOUT", "CONTACT"].map((item, index) => (
             <motion.li
               key={item}
               initial={{ opacity: 0, y: 20 }}
@@ -235,7 +312,7 @@ export default function AvantGardePortfolio() {
       </motion.nav>
 
       {/* Project Detail Modal */}
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {showProjectDetail && selectedProject && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -245,7 +322,7 @@ export default function AvantGardePortfolio() {
           >
             <div className="min-h-screen px-6 md:px-16 py-16">
               <div className="max-w-screen-xl mx-auto">
-                
+
                 <motion.button
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -256,7 +333,7 @@ export default function AvantGardePortfolio() {
                   BACK TO WORK
                 </motion.button>
 
-                
+
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -271,15 +348,17 @@ export default function AvantGardePortfolio() {
                     <div className="text-right">
                       <p className="text-xl text-gray-500 mb-4">{selectedProject.year}</p>
                       <div className="flex gap-4">
-                        <a
-                          href={selectedProject.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 border border-white/20 px-4 py-2 hover:bg-white/5 transition-colors"
-                        >
-                          LIVE SITE
-                          <ArrowUpRight className="w-4 h-4" />
-                        </a>
+                        {selectedProject.liveUrl && (
+                          <a
+                            href={selectedProject.liveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 border border-white/20 px-4 py-2 hover:bg-white/5 transition-colors"
+                          >
+                            LIVE SITE
+                            <ArrowUpRight className="w-4 h-4" />
+                          </a>
+                        )}
                         <a
                           href={selectedProject.githubUrl}
                           target="_blank"
@@ -294,7 +373,7 @@ export default function AvantGardePortfolio() {
                   </div>
                 </motion.div>
 
-                
+
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -303,18 +382,18 @@ export default function AvantGardePortfolio() {
                 >
                   <div className="grid gap-8">
                     {selectedProject.images.map((image, index) => (
-                      <div key={index} className="aspect-video bg-white/5 rounded-lg overflow-hidden">
+                      <div key={index} className="w-full bg-white/5 rounded-lg overflow-hidden flex items-center justify-center p-4">
                         <img
-                          src={image || "/placeholder.svg"}
+                          src={image}
                           alt={`${selectedProject.title} screenshot ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          className="max-w-full h-auto object-contain rounded"
                         />
                       </div>
                     ))}
                   </div>
                 </motion.div>
 
-                
+
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -345,7 +424,6 @@ export default function AvantGardePortfolio() {
           </motion.div>
         )}
       </AnimatePresence>
-*/}
       {/* Hero Section */}
       <section id="home" className="min-h-screen flex flex-col justify-center relative px-6 md:px-16">
         <motion.div
@@ -389,13 +467,13 @@ export default function AvantGardePortfolio() {
                   I'm a creative full-stack product developer specializing in building LLM-powered and agentic web applications.
                 </p>
 
-                {/* <Link
+                <Link
                   href="#work"
                   className="group flex items-center gap-2 text-xl border border-white/20 px-6 py-3 hover:bg-white/5 transition-colors w-fit"
                 >
                   VIEW WORK
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link> */}
+                </Link>
               </motion.div>
             </div>
 
@@ -438,7 +516,7 @@ export default function AvantGardePortfolio() {
       </section>
 
       {/* Work Section - Now a Carousel */}
-     {/*} <section id="work" className="min-h-screen py-32 relative">
+      <section id="work" className="min-h-screen py-32 relative">
         <div className="absolute -right-20 top-0 opacity-10 pointer-events-none">
           <h2 className="text-[30vw] font-black">W</h2>
         </div>
@@ -489,19 +567,24 @@ export default function AvantGardePortfolio() {
                       className="group pr-8"
                     >
                       <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                        <div className="flex items-baseline gap-4">
-                          <span className="text-gray-600 text-xl">{String(index + 1).padStart(2, "0")}</span>
-                          <h3 className="text-6xl md:text-8xl font-black">{project.title}</h3>
+                        <div className="flex items-baseline gap-4 flex-1 min-w-0">
+                          <span className="text-gray-600 text-xl flex-shrink-0">{String(index + 1).padStart(2, "0")}</span>
+                          <h3 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black break-words">{project.title}</h3>
                         </div>
-                        <span className="text-xl text-gray-500">{project.year}</span>
+                        <span className="text-xl text-gray-500 flex-shrink-0">{project.year}</span>
                       </div>
 
                       <div
                         className="h-[50vh] bg-white/5 relative overflow-hidden group-hover:bg-white/10 transition-colors cursor-pointer"
                         onClick={() => openProjectDetail(project)}
                       >
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                          <button className="flex items-center gap-2 text-xl border border-white px-6 py-3 hover:bg-white hover:text-black transition-colors">
+                        <img
+                          src={project.images[0]}
+                          alt={project.title}
+                          className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-40 transition-opacity duration-500"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10">
+                          <button className="flex items-center gap-2 text-xl border border-white px-6 py-3 hover:bg-white hover:text-black transition-colors backdrop-blur-sm bg-black/30">
                             VIEW PROJECT
                             <ArrowUpRight className="w-5 h-5" />
                           </button>
@@ -530,7 +613,7 @@ export default function AvantGardePortfolio() {
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* About Section */}
       <section id="about" className="min-h-screen py-32 relative">
@@ -694,7 +777,7 @@ export default function AvantGardePortfolio() {
           <div className="text-xl">NICKOLUS CUNNINGHAM © {new Date().getFullYear()}</div>
 
           <div className="flex gap-8">
-            {["Home", /*"Work",*/ "About", "Contact"].map((item) => (
+            {["Home", "Work", "About", "Contact"].map((item) => (
               <Link
                 key={item}
                 href={`#${item.toLowerCase()}`}
