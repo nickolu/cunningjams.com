@@ -1,6 +1,7 @@
 .next
 .env
 node_modules
-public
+public/*
+!public/projects/
 .git
 .vscode
