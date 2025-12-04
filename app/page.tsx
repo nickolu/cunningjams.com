@@ -61,7 +61,7 @@ export default function AvantGardePortfolio() {
       id: 1,
       title: "CUNNINGTYPE",
       subtitle: "Typing Training Application",
-      year: "2024",
+      year: "2025",
       description: "An intelligent typing trainer that uses AI to identify and target your weakest patterns.",
       fullDescription:
         "A comprehensive typing skills development platform that goes beyond traditional typing tests. Cunningtype intelligently analyzes your typing patterns to identify specific weaknesses, then leverages AI to generate custom training content that targets those exact areas. The result is a highly personalized training experience that accelerates improvement where you need it most.",
@@ -87,7 +87,7 @@ export default function AvantGardePortfolio() {
       id: 3,
       title: "COMETCAVE",
       subtitle: "Experimental AI Playground",
-      year: "2024",
+      year: "2025",
       description: "A creative sandbox for AI-powered experiments and entertaining digital experiences.",
       fullDescription:
         "CometCave serves as a personal laboratory for exploring the creative possibilities of AI. This collection of experimental projects showcases various AI capabilities through entertaining and sometimes whimsical applications. Each project pushes the boundaries of what's possible when combining artificial intelligence with creative web development.",
@@ -100,7 +100,7 @@ export default function AvantGardePortfolio() {
       id: 4,
       title: "WHOWOULDWIN-INATOR",
       subtitle: "AI Battle Scenario Generator",
-      year: "2024",
+      year: "2025",
       description: "Generate epic battle scenarios and artwork between any two characters using multi-step AI workflows.",
       fullDescription:
         "An sophisticated agentic workflow that orchestrates multiple AI models to create entertaining battle scenarios complete with custom artwork. The system features 'progressive safety retries' - a novel approach that enables the generation of images featuring copyrighted characters while respecting content policies. Users can pit any two characters against each other and receive detailed battle narratives alongside unique artwork depicting the confrontation.",
@@ -113,7 +113,7 @@ export default function AvantGardePortfolio() {
       id: 5,
       title: "THEOSIS",
       subtitle: "Band Website Design",
-      year: "2024",
+      year: "2025",
       description: "A visually stunning website created for the band Theosis over a weekend creative sprint.",
       fullDescription:
         "A passion project born from a desire to give back to the music community through exceptional web design. Challenging myself to create the best possible website over a single weekend, this project combines artistic expression with modern web capabilities. The site features custom artwork and interactive elements that capture the band's aesthetic and energy.",
@@ -139,7 +139,7 @@ export default function AvantGardePortfolio() {
       id: 7,
       title: "CUNNINGJAMS ALBUMS",
       subtitle: "Photo Gallery Web Application",
-      year: "2024",
+      year: "2025",
       description: "A feature-rich photo gallery powered by Cloudinary with multi-album support.",
       fullDescription:
         "A sophisticated photo gallery application built with the Cloudinary API, featuring password-protected albums, image optimization, and a sleek viewing experience. The system supports multiple configurable albums, each with its own settings and access controls. Perfect for sharing photo collections with family and friends while maintaining privacy and organization.",
@@ -152,7 +152,7 @@ export default function AvantGardePortfolio() {
       id: 8,
       title: "CUNNINGBOT",
       subtitle: "Multi-Purpose Discord Bot",
-      year: "2024",
+      year: "2025",
       description: "A feature-rich Discord bot running on Raspberry Pi with LLM and image generation capabilities.",
       fullDescription:
         "A comprehensive Discord bot hosted on a Raspberry Pi, providing server members with access to multiple LLM APIs, image generation capabilities, and custom features including a baseball statistics MCP built with public baseball data. The bot serves as a personal assistant and entertainment hub for Discord communities, demonstrating how consumer hardware can power sophisticated AI applications.",
@@ -207,6 +207,18 @@ export default function AvantGardePortfolio() {
   const closeProjectDetail = () => {
     setShowProjectDetail(false)
     setSelectedProject(null)
+  }
+
+  const navigateToProject = (direction: 'next' | 'prev') => {
+    if (!selectedProject) return
+    const currentIndex = projects.findIndex(p => p.id === selectedProject.id)
+    let newIndex
+    if (direction === 'next') {
+      newIndex = (currentIndex + 1) % projects.length
+    } else {
+      newIndex = (currentIndex - 1 + projects.length) % projects.length
+    }
+    setSelectedProject(projects[newIndex])
   }
 
   return (
@@ -418,6 +430,29 @@ export default function AvantGardePortfolio() {
                       ))}
                     </div>
                   </div>
+                </motion.div>
+
+                {/* Navigation */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex justify-between items-center mt-16 pt-8 border-t border-white/10"
+                >
+                  <button
+                    onClick={() => navigateToProject('prev')}
+                    className="group flex items-center gap-2 text-xl hover:text-gray-400 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    PREVIOUS PROJECT
+                  </button>
+                  <button
+                    onClick={() => navigateToProject('next')}
+                    className="group flex items-center gap-2 text-xl hover:text-gray-400 transition-colors"
+                  >
+                    NEXT PROJECT
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </motion.div>
               </div>
             </div>
