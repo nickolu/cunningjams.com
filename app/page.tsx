@@ -23,6 +23,7 @@ const socialLinks = [
   { name: "GITHUB", url: "https://github.com/nickolu", icon: "⚡" },
   { name: "INSTAGRAM", url: "https://instagram.com/cunning.aim", icon: "📸" },
   { name: "TIKTOK", url: "https://tiktok.com/@cunning.jams", icon: "🎵" },
+  { name: "BLOG", url: "/blog", icon: "📝" },
 ]
 
 export default function AvantGardePortfolio() {

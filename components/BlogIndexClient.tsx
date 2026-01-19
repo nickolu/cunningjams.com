@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 import type { BlogPostMetadata } from '@/lib/blog';
 
 function formatDate(dateString: string): string {
@@ -19,6 +20,10 @@ interface BlogIndexClientProps {
 }
 
 export function BlogIndexClient({ posts }: BlogIndexClientProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => setMenuOpen(!menuOpen);
+
   return (
     <div className="bg-black text-white min-h-screen">
       {/* Background gradient effects */}
@@ -29,6 +34,43 @@ export function BlogIndexClient({ posts }: BlogIndexClientProps) {
 
       {/* Noise texture */}
       <div className="fixed inset-0 bg-noise opacity-10 mix-blend-overlay pointer-events-none -z-10" />
+
+      {/* Menu Button */}
+      <button
+        onClick={toggleMenu}
+        className="fixed top-8 right-8 z-50 w-12 h-12 flex items-center justify-center bg-white/5 backdrop-blur-sm rounded-full"
+      >
+        {menuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+      </button>
+
+      {/* Navigation Menu */}
+      <motion.nav
+        initial={false}
+        animate={{ x: menuOpen ? "0%" : "100%" }}
+        className="fixed inset-0 bg-black z-40 flex items-center justify-center"
+      >
+        <ul className="space-y-8 text-center">
+          {["HOME", "WORK", "ABOUT", "BLOG", "CONTACT"].map((item, index) => (
+            <motion.li
+              key={item}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{
+                opacity: menuOpen ? 1 : 0,
+                y: menuOpen ? 0 : 20,
+                transition: { delay: menuOpen ? index * 0.1 : 0 },
+              }}
+            >
+              <Link
+                href={item === "BLOG" ? "/blog" : `/#${item.toLowerCase()}`}
+                className="text-5xl md:text-7xl font-extralight hover:text-gray-400 transition-colors"
+                onClick={toggleMenu}
+              >
+                {item}
+              </Link>
+            </motion.li>
+          ))}
+        </ul>
+      </motion.nav>
 
       <div className="max-w-screen-xl mx-auto px-6 md:px-16 py-32">
         {/* Header */}
