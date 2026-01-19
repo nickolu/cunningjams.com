@@ -301,7 +301,7 @@ export default function AvantGardePortfolio() {
         className="fixed inset-0 bg-black z-40 flex items-center justify-center"
       >
         <ul className="space-y-8 text-center">
-          {["HOME", "WORK", "ABOUT", "CONTACT"].map((item, index) => (
+          {["HOME", "WORK", "ABOUT", "BLOG", "CONTACT"].map((item, index) => (
             <motion.li
               key={item}
               initial={{ opacity: 0, y: 20 }}
@@ -312,7 +312,7 @@ export default function AvantGardePortfolio() {
               }}
             >
               <Link
-                href={`#${item.toLowerCase()}`}
+                href={item === "BLOG" ? "/blog" : `#${item.toLowerCase()}`}
                 className="text-5xl md:text-7xl font-extralight hover:text-gray-400 transition-colors"
                 onClick={toggleMenu}
               >
@@ -812,10 +812,10 @@ export default function AvantGardePortfolio() {
           <div className="text-xl">NICKOLUS CUNNINGHAM © {new Date().getFullYear()}</div>
 
           <div className="flex gap-8">
-            {["Home", "Work", "About", "Contact"].map((item) => (
+            {["Home", "Work", "About", "Blog", "Contact"].map((item) => (
               <Link
                 key={item}
-                href={`#${item.toLowerCase()}`}
+                href={item === "Blog" ? "/blog" : `#${item.toLowerCase()}`}
                 className="text-gray-500 hover:text-white transition-colors"
               >
                 {item.toUpperCase()}
