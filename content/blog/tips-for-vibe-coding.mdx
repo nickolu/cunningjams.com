@@ -1,0 +1,28 @@
+---
+title: Tips for Vibe-Coding
+date: '2025-04-18'
+description: These are my tips on writing code using LLMs
+author: Nickolus Cunningham
+tags:
+  - AI
+  - Software Engineering
+---
+Based on my experience using AI tools like Cursor, Windsurf, and others to help with my work, here’s some advice I’ve found useful. It probably lines up with what others are saying, but this is how I’d put it in my own words:
+
+## 1\. Keep the scope of any request as small as you can.
+
+Even the best models today make a lot of mistakes. Sometimes that happens because the prompt isn't clear enough. Other times, giving too much context can confuse the model. If you ask it to do too much at once, it becomes harder to spot where things went wrong. You might even need to revert a big chunk of work just to get back to a working state.
+
+## 2\. Make sure you understand _everything_ it writes.
+
+It’s easy to look at AI-generated code and think it looks fine. But do you actually understand what it’s doing? If the model uses a language or library you’re not familiar with, make sure to look up what it's doing or ask the AI to explain it. If you aren't doing this, you'll end up having a bunch of building blocks in your code and no idea what they are for, or if they are even necessary. This is the step that will separate the vibe-coders from the serious developers, at least in the next year or two.
+
+## 3\. Review your code for unexpected changes.
+
+The more freedom you give the AI, or the more you hit TAB without thinking, the more likely you are to introduce random changes. I often see it delete or tweak lines of code that have nothing to do with the task. This ties back to points one and two, but it also deserves its own callout. Always read through changes line by line. If a teammate asks why you removed something important, you can’t just blame the AI. That’s no different from copying something off Stack Overflow and not knowing what it does. You're still responsible for every line you commit.
+
+## 4\. Turn it off sometimes.
+
+Doing job interviews in the last year taught me that my hard programming skills do begin to atrophy as I rely on AI more and more. Some modern and forward-thinking companies (like [**Pulley**](https://www.linkedin.com/company/pulley-cap-table/)) are starting to accept this and invite AI into the interview. But most interviewers expect you to do the nuts-and-bolts programming on your own. My advice is to take time at least once a month to write code without AI. Whether it's Leetcode, Advent of Code, or just a regular day on the job, doing it the hard way will keep your skills sharp. Think of it like going to the gym, but for your programming skills.
+
+I have more to say, but this is all LinkedIn will let me fit. If any of this resonates with you, or if you have a different take, let me know in the comments. I'm curious to hear how others are working with these tools.
