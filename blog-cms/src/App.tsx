@@ -34,8 +34,10 @@ function App() {
   });
   const [body, setBody] = React.useState('');
   const [errors, setErrors] = React.useState<string[]>([]);
-  const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error' | 'auto-saving' | 'auto-saved'>('idle');
   const [isNewPost, setIsNewPost] = React.useState(false);
+  const [lastSaveTime, setLastSaveTime] = React.useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
 
   // Check for saved directory handle on mount
   React.useEffect(() => {
@@ -99,18 +101,22 @@ function App() {
   };
 
   // Handle saving
-  const handleSave = async () => {
+  const handleSave = async (isAutoSave = false) => {
     if (!directoryHandle) return;
 
     // Validate
     const validationErrors = validateFrontmatter(frontmatter);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
+      // Don't show error for auto-save, just skip it
+      if (isAutoSave) {
+        return;
+      }
       return;
     }
 
     setErrors([]);
-    setSaveStatus('saving');
+    setSaveStatus(isAutoSave ? 'auto-saving' : 'saving');
 
     try {
       const content = serializeMDX(frontmatter, body);
@@ -145,8 +151,10 @@ function App() {
         setSelectedPost({ ...selectedPost, content });
       }
 
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      setSaveStatus(isAutoSave ? 'auto-saved' : 'saved');
+      setLastSaveTime(new Date());
+      setHasUnsavedChanges(false);
+      setTimeout(() => setSaveStatus('idle'), isAutoSave ? 3000 : 2000);
     } catch (err) {
       console.error('Failed to save:', err);
       setSaveStatus('error');
@@ -154,12 +162,42 @@ function App() {
     }
   };
 
+  // Track unsaved changes
+  React.useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [frontmatter, body]);
+
+  // Auto-save after 2 seconds of inactivity
+  React.useEffect(() => {
+    // Don't auto-save if no post is selected or no directory
+    if (!directoryHandle || (!selectedPost && !isNewPost)) {
+      return;
+    }
+
+    // Don't auto-save if there are no changes
+    if (!hasUnsavedChanges) {
+      return;
+    }
+
+    // Don't auto-save if currently saving
+    if (saveStatus === 'saving' || saveStatus === 'auto-saving') {
+      return;
+    }
+
+    // Set up debounced auto-save
+    const timeoutId = setTimeout(() => {
+      handleSave(true);
+    }, 2000); // 2 seconds of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [frontmatter, body, directoryHandle, selectedPost, isNewPost, hasUnsavedChanges, saveStatus]);
+
   // Keyboard shortcut for save (Ctrl+S / Cmd+S)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        handleSave();
+        handleSave(false);
       }
     };
 
@@ -226,6 +264,17 @@ function App() {
               Saved!
             </span>
           )}
+          {saveStatus === 'auto-saved' && lastSaveTime && (
+            <span className="text-sm text-gray-600 flex items-center gap-1">
+              <CheckCircle size={16} />
+              Auto-saved at {lastSaveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+          {saveStatus === 'auto-saving' && (
+            <span className="text-sm text-gray-600 flex items-center gap-1">
+              Auto-saving...
+            </span>
+          )}
           {saveStatus === 'error' && (
             <span className="text-sm text-red-600 flex items-center gap-1">
               <AlertCircle size={16} />
@@ -233,8 +282,8 @@ function App() {
             </span>
           )}
           <button
-            onClick={handleSave}
-            disabled={saveStatus === 'saving'}
+            onClick={() => handleSave(false)}
+            disabled={saveStatus === 'saving' || saveStatus === 'auto-saving'}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Save size={18} />
