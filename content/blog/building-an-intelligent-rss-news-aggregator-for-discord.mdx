@@ -11,8 +11,6 @@ tags:
   - Discord
   - AI
 ---
-# Building an Intelligent RSS News Aggregator for Discord
-
 ## The Problem
 
 [A friend of mine](https://www.astrocrash.net) created a useful RSS feed to aggregate a bunch of San Diego news feeds. My instinct was to use [my discord bot](https://github.com/nickolu/cunningbot) to post the content to a new channel in discord, which worked, but generated a ton of noise.
@@ -211,7 +209,6 @@ With the clustered and summarized stories in place, we'll do another check, comp
 
 #### **_Step 5: Final Summary Generation_**
 
-  
 Now we're ready to post the full news summary for this period of time. At this stage we have the LLM review the story clusters and post one update of all the stories, then clear out the pending stories from the state to allow the system to start collecting more stories for the next update
 
 **Contextual Summarization:**
@@ -229,7 +226,7 @@ Now we're ready to post the full news summary for this period of time. At this s
 
 ### Feed Diversity & Fairness
 
-After creating several channels with multiple feeds, it was apparent that some feeds post so often, they drown out other feeds in the same channel. To help regulate how much space in a given news update one feed can take up, I created this feed diversity solution. Here's how it works.  
+After creating several channels with multiple feeds, it was apparent that some feeds post so often, they drown out other feeds in the same channel. To help regulate how much space in a given news update one feed can take up, I created this feed diversity solution. Here's how it works.
 
 1.  Each channel already has a limited number of stories that will be collected from feeds in the pending\_stories state (default: 50)
     
@@ -245,18 +242,18 @@ After creating several channels with multiple feeds, it was apparent that some f
 **Example: News Channel with 5 feeds**  
 Collection Limit of 50 stories  
 Minimum per feed is 2 stories  
-Maximum per feed is 8 stories  
-  
+Maximum per feed is 8 stories
+
 Feed 1: 125 new stories  
 Feed 2: 8 new stories  
 Feed 3: 2 new stories  
 Feed 4: 12 new stories  
-Feed 5: 220 new stories  
-  
-(Without distribution, its possible that all stories would come from Feed 1 and no other feeds would be represented in the update)  
-  
-With distribution using the values mentioned above, we would first collect 2 stories from each feed (10 total). Feed 1, 2, 4, and 5 still have leftover stories, so we'll collect up to the maximum for each: 6 from each feed (24 total). Of our 50 story maximum, we still have 16 "slots" open, so we'll pull one story from each feed in a round-robin style until we've reached the limit. This way we end up with the following distribution:  
-  
+Feed 5: 220 new stories
+
+(Without distribution, its possible that all stories would come from Feed 1 and no other feeds would be represented in the update)
+
+With distribution using the values mentioned above, we would first collect 2 stories from each feed (10 total). Feed 1, 2, 4, and 5 still have leftover stories, so we'll collect up to the maximum for each: 6 from each feed (24 total). Of our 50 story maximum, we still have 16 "slots" open, so we'll pull one story from each feed in a round-robin style until we've reached the limit. This way we end up with the following distribution:
+
 Feed 1: 2 + 6 + 6 = 14/125 stories  
 Feed 2: 2 + 6 + 0 = 8/8 stories  
 Feed 3: 2 + 0 + 0 = 2/2 stories  
