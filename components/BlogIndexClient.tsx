@@ -80,7 +80,7 @@ export function BlogIndexClient({ posts }: BlogIndexClientProps) {
           transition={{ duration: 0.8 }}
           className="mb-24"
         >
-          <h1 className="text-[15vw] md:text-[10vw] font-black leading-none mb-6">Nick.Overflow</h1>
+          <h1 className="text-[8vw] md:text-[8vw] font-black leading-none mb-6">Nick.Overflow</h1>
           <p className="text-xl md:text-2xl text-gray-400 max-w-2xl">
             Thoughts on software and creative projects.
           </p>
