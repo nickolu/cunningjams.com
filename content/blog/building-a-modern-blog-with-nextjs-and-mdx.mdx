@@ -1,0 +1,159 @@
+---
+title: 'Building a Modern Blog with Next.js and MDX'
+date: '2026-01-19'
+description: 'How I migrated my old WordPress blog to a modern Next.js site with MDX, including converting SQL backups to Markdown'
+author: Nickolus Cunningham
+tags:
+  - nextjs
+  - mdx
+  - wordpress
+  - migration
+  - blog
+---
+
+# Building a Modern Blog with Next.js and MDX
+
+## Introduction
+[Write about why you decided to rebuild your blog. What was the motivation? What were the pain points with WordPress?]
+
+## Choosing the Tech Stack
+
+### Why Next.js?
+[Explain your decision to use Next.js]
+- Static Site Generation benefits
+- React-based for component reusability
+- Built-in optimization features
+
+### Why MDX?
+[Explain why MDX over plain Markdown or a CMS]
+- Writing in Markdown with React component support
+- Full control over content
+- No database required
+- Version control friendly
+
+## Building the Blog System
+
+### Setting Up the Basic Structure
+[Describe the initial setup]
+- Creating the Next.js app
+- Setting up the file-based routing
+- Organizing the content directory structure
+
+### Implementing the Blog Functionality
+[Describe the key pieces you built]
+- Reading MDX files from the filesystem
+- Parsing frontmatter with gray-matter
+- Generating static pages at build time
+- Creating the blog listing page
+- Building individual blog post pages
+
+### Styling and Design
+[Talk about the design choices]
+- Typography and readability
+- Code syntax highlighting (if applicable)
+- Responsive design considerations
+
+## The Migration Challenge
+
+### The Old WordPress Backups
+[Describe the situation]
+- Multiple SQL backup files from HostMonster
+- Years of old blog posts trapped in database dumps
+- No access to the live WordPress site anymore
+
+### Building a Custom Converter
+[Explain the technical challenge]
+- Parsing WordPress SQL dumps
+- Extracting published posts from wp_posts table
+- Converting HTML content to Markdown
+
+### Handling the Conversion Issues
+
+#### Challenge 1: SQL Parsing
+[Describe the complexity]
+- WordPress INSERT statements with escaped content
+- Nested quotes and special characters
+- Multiple rows per INSERT statement
+
+#### Challenge 2: HTML to Markdown Conversion
+[Explain the conversion process]
+- Converting common HTML tags (headers, lists, links, bold/italic)
+- Handling WordPress-specific markup
+- Cleaning up line breaks and whitespace
+- Preserving important formatting
+
+#### Challenge 3: YAML Frontmatter Issues
+[Describe the debugging process]
+- Initial YAML parsing errors
+- Colons and special characters breaking the parser
+- Finding the right escaping strategy
+- Single quotes vs double quotes in YAML
+- Validating all 26 files
+
+## The Final Result
+
+### What Works Now
+[Describe the current state]
+- 23 migrated posts from WordPress
+- Clean, readable Markdown content
+- Fast, static site generation
+- Easy to write new posts
+
+### Lessons Learned
+[Share insights from the process]
+- The importance of proper escaping in YAML
+- Why simple solutions (file-based) can be better
+- Benefits of static site generation
+- Trade-offs compared to WordPress
+
+## Future Improvements
+
+[List potential enhancements]
+- Add search functionality
+- Implement tags/categories filtering
+- Add RSS feed
+- Improve code syntax highlighting
+- Add comments system (if desired)
+- Fix broken image links from old posts
+- Better handling of WordPress shortcodes (galleries, etc.)
+
+## Conclusion
+[Wrap up with final thoughts]
+- Was it worth the effort?
+- Would you recommend this approach to others?
+- What would you do differently?
+
+---
+
+## Code Snippets to Include
+
+[These are suggestions for code examples you might want to add while writing]
+
+1. **Example of reading and parsing MDX files:**
+```typescript
+// Show how you read MDX files from the filesystem
+// Include the gray-matter parsing
+```
+
+2. **Example of the SQL parsing logic:**
+```python
+# Show key parts of how you extracted posts from SQL
+```
+
+3. **Example of frontmatter structure:**
+```yaml
+---
+title: 'Your Post Title'
+date: '2026-01-19'
+description: 'A brief description'
+author: Nickolus Cunningham
+tags:
+  - tag1
+  - tag2
+---
+```
+
+4. **Example of generating static pages:**
+```typescript
+// Show the getStaticProps/getStaticPaths pattern
+```
