@@ -37,6 +37,7 @@ const turndownService = new TurndownService({
 
 export function Editor({ content, onChange }: EditorProps) {
   const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const isUpdatingRef = React.useRef(false);
 
   const editor = useEditor({
     extensions: [
@@ -61,15 +62,26 @@ export function Editor({ content, onChange }: EditorProps) {
     ],
     content: '',
     onUpdate: ({ editor }) => {
+      isUpdatingRef.current = true;
       const html = editor.getHTML();
       const markdown = turndownService.turndown(html);
       onChange(markdown);
+      // Reset flag after React has processed the state update
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 0);
     },
   });
 
-  // Convert markdown to HTML and set it in the editor only on initial load or content prop change
+  // Convert markdown to HTML and set it in the editor only on initial load or external content changes
   React.useEffect(() => {
-    if (!editor || !isInitialLoad) return;
+    if (!editor) return;
+
+    // Don't update if the change came from the editor itself
+    if (isUpdatingRef.current) return;
+
+    // Don't update if it's not the initial load (external change detection)
+    if (!isInitialLoad) return;
 
     const convertAndSetContent = async () => {
       try {
@@ -86,9 +98,11 @@ export function Editor({ content, onChange }: EditorProps) {
     convertAndSetContent();
   }, [editor, content, isInitialLoad]);
 
-  // Reset initial load flag when content prop changes (new post selected)
+  // Reset initial load flag when content prop changes (but not from editor updates)
   React.useEffect(() => {
-    setIsInitialLoad(true);
+    if (!isUpdatingRef.current) {
+      setIsInitialLoad(true);
+    }
   }, [content]);
 
   if (!editor) {
