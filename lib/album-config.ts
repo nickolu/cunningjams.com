@@ -72,6 +72,13 @@ const albumConfigs: AlbumConfigs = {
     cloudinaryFolder: "vinhs-40th",
     password: process.env.VINHS_40TH_ALBUM_PASSWORD || "1234",
     adminPassword: process.env.VINHS_40TH_ADMIN_PASSWORD || "vinhs-40th-admin"
+  },
+  "2026-paxtons-birthday": {
+    title: "Paxton's Birthday",
+    subtitle: "Paxton's Birthday",
+    cloudinaryFolder: "2026-paxtons-birthday",
+    password: process.env.PAXTONS_BIRTHDAY_ALBUM_PASSWORD || "1234",
+    adminPassword: process.env.PAXTONS_BIRTHDAY_ADMIN_PASSWORD || "2026-paxtons-birthday-admin"
   }
 };
 
