@@ -209,13 +209,27 @@ Some ideas for enhancement:
 - Reference with absolute path: `/images/photo.jpg`
 - Use the `<Image>` component for optimization
 
+## Blog CMS
+
+A browser-based CMS tool is available as a sibling directory at `../blog-cms/`.
+
+To use it:
+```bash
+cd ../blog-cms
+pnpm dev
+```
+
+Then open http://localhost:5173 and select the `content/blog/` directory.
+
+See `../blog-cms/README.md` for full documentation.
+
 ## Next Steps
 
 Your blog is ready to use! Consider:
 
 1. Writing your first real post
 2. Adding a link to `/blog` in your main navigation
-3. Setting up the separate CMS tool (if desired)
+3. Using the CMS tool for easier editing (see above)
 4. Configuring analytics to track post views
 5. Adding an RSS feed for subscribers
 

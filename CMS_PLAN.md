@@ -17,23 +17,27 @@ A lightweight, browser-based CMS for managing MDX blog posts. Runs entirely clie
 ### Project Structure
 
 ```
-blog-cms/
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── Editor.tsx           # Main TipTap editor
-│   │   ├── FileManager.tsx      # File browser/picker
-│   │   ├── FrontmatterForm.tsx  # Metadata editor
-│   │   ├── Preview.tsx          # Live MDX preview
-│   │   └── Toolbar.tsx          # Editor controls
-│   ├── lib/
-│   │   ├── file-system.ts       # File System Access API wrapper
-│   │   ├── mdx-parser.ts        # Parse/serialize MDX
-│   │   └── storage.ts           # LocalStorage for settings
-│   ├── App.tsx
-│   └── main.tsx
-├── package.json
-└── README.md
+~/git/personal/
+├── blog-cms/                    # CMS application (sibling to main site)
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Editor.tsx           # Main TipTap editor
+│   │   │   ├── FileManager.tsx      # File browser/picker
+│   │   │   ├── FrontmatterForm.tsx  # Metadata editor
+│   │   │   ├── Preview.tsx          # Live MDX preview
+│   │   │   └── Toolbar.tsx          # Editor controls
+│   │   ├── lib/
+│   │   │   ├── file-system.ts       # File System Access API wrapper
+│   │   │   ├── mdx-parser.ts        # Parse/serialize MDX
+│   │   │   └── storage.ts           # LocalStorage for settings
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── README.md
+└── cunningjams.com/             # Main website
+    └── content/
+        └── blog/                # Blog posts directory
 ```
 
 ## Core Features
@@ -218,14 +222,15 @@ export function serializeMDX(frontmatter: any, body: string) {
 
 ### Open Source Repository
 
+The CMS is now a sibling directory to the main site:
+
 ```
-blog-cms/
-├── README.md           # Full documentation
-├── CONTRIBUTING.md     # How to contribute
-├── LICENSE            # MIT or similar
-├── examples/          # Example MDX files
-├── docs/              # Usage documentation
-└── src/               # Source code
+~/git/personal/
+├── blog-cms/          # CMS tool (separate from main site)
+│   ├── README.md
+│   └── src/
+└── cunningjams.com/   # Main website
+    └── content/blog/  # CMS edits files here
 ```
 
 ## Development Roadmap
