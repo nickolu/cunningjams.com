@@ -1,0 +1,67 @@
+---
+title: Teamwork in the Age of Agents
+date: '2026-02-27'
+description: It's time to revisit teamwork now that agents are in the picture
+author: Nickolus Cunningham
+tags:
+  - AI
+  - Teamwork
+  - Software Development
+---
+Everyone is talking about how AI agents (for example, autonomous or semi-autonomous software assistants) empower devs. I want to talk about how AI agents can empower whole teams.  
+  
+What I've observed:
+
+*   Developers figuring out their own agent-assisted development practices
+    
+*   Individuals wanting to solve every problem themselves
+    
+*   Various roles competing to be the one who can use AI to do all of the jobs
+    
+
+Since integrating agents into our workflows, collaboration has suffered, with individuals competing to prove their relevance.
+
+I think teams should be honest about this problem and collaborate with each other and with agents. By doing so, every role remains relevant. Product discovers the most important customer problems and sets priorities; Design is responsible for understanding how users interact with tools and creating a great user experience; and Engineering is ultimately responsible for implementation. These three roles remain crucial, even if the entire cycle may compress into a tighter feedback loop.
+
+Here's what I'm proposing.
+
+### Start talking about agentic work as a team, with the whole team.
+
+Don't ignore the fact that developers are turning around and implementing the requirements using AI agents. I've seen (and felt) a tendency to want to take a bunch of requirements and surprise the team with how much we can accomplish. _We're past that now._ We're no longer in the phase of scoping tasks as 'three points' and then completing them in half an hour. We're getting to be able to understand where AI accelerates the work, and where it actually doesn't help much. We need to talk about this up front and be realistic about the effort required.
+
+### Discuss how you plan to build with agents as a team
+
+As I've said, developers (and the rest of the team) should discuss the work from the perspective of how it includes agents.
+
+With agent-driven development, we're seeing a lot of success using an LLM to write a plan before implementing the work. But there's also thought that goes into how we instruct the agent to write the plan from the beginning; this process benefits from the context everyone at the table provides.
+
+Some of the topics/guidance we should be giving the agent as we write the plan:
+
+*   What architectural guidance should we give? What similar patterns exist in the code which we can refer to?
+    
+*   What are the UI components being used in this? Are any of them new?
+    
+*   How do we ensure design consistency throughout any UI development?
+    
+*   How should the work be orchestrated to multiple agents? What parts of the work are well-suited to subagents/task agents? Where are we likely to see instances of the model's context window being exceeded? How should we handle when a task agent fails?
+    
+*   Will this affect any legacy code that requires refactoring?
+    
+*   Where are the agents likely to go wrong/make mistakes?
+    
+
+I'm probably missing some things, but that's the point I'm making. A developer has much more context than an agent, but the entire team has far more context than that. In the world where context engineering is the backbone of development, we should be utilizing contextual insights from various disciplines. No one person is likely to know everything needed to solve a problem optimally.
+
+### Use agents together
+
+For everything stated above, I think we're also tempted to answer those questions ourselves (or at least I am). But that belies my earlier point: don't ignore the fact that we're using agents. We should ask the agent the same questions: how to build the plan and what context we need. We should conduct this process openly and share the feedback with the team. We should share our screens while prompting the agent. We should practice agentic pair programming.
+
+When I say "agentic pair programming," I speak of something I have yet to see in the wild: two or more developers working on an issue, taking turns as the driver _while using agents to implement the code._ I share my screen with my terminal or agentic UI open, we talk about the context to give it, we write the plan, we review the output, we iterate on that together, review the implementation, etc etc. Everything we normally do alone, we do together.
+
+This has the same benefits pair programming always has:
+
+1.  **Facilitates knowledge transfer between participants.** I'll learn your ways of agentic coding, and you'll learn mine.
+    
+2.  **Accelerates the code review process.** When two developers solve a problem together—looking at the code, studying the test cases, and reviewing all the outcomes— the review cycle gets much shorter. This is maybe the _number one benefit of this proposal_ because PR reviews have recently become one of the biggest bottlenecks in software development.
+    
+3.  **It improves code quality and reduces the likelihood of defects.** The old adage "two heads are better than one" has not changed with AI in the room. It's no secret that even the latest AI models make mistakes. Even as smart as Opus 4.6 is, it does not have the full context. Even you, brilliant developer are missing context.
