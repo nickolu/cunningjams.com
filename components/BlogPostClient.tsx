@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { BlogComments } from './BlogComments';
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -104,12 +105,21 @@ export function BlogPostClient({ post, mdxContent }: BlogPostClientProps) {
             {mdxContent}
           </motion.div>
 
+          {/* Comments */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <BlogComments slug={post.slug} />
+          </motion.div>
+
           {/* Post footer */}
           <motion.footer
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-24 pt-12 border-t border-white/10"
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-12 pt-12 border-t border-white/10"
           >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <p className="text-lg text-gray-500">

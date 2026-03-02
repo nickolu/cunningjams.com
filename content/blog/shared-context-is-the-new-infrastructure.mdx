@@ -1,0 +1,55 @@
+---
+title: "Shared Context Is the New Infrastructure"
+date: '2026-03-02'
+description: In the agent era, context becomes the most valuable technical asset your team has.
+author: Nickolus Cunningham
+tags:
+  - AI
+  - Teamwork
+  - Software Development
+  - Engineering
+---
+
+Teams invest heavily in the things that keep software running—CI/CD pipelines, observability tooling, cloud infrastructure. These get versioned, reviewed, and owned. They're treated as serious engineering concerns because everyone understands what happens when they break down. There's another asset that most teams are leaving almost completely unmanaged, and in the agent era, it's quietly becoming the most important thing you have: shared context.
+
+---
+
+## Shared Consciousness in the Agent Era
+
+Stanley McChrystal wrote about transforming the Joint Special Operations Command not by giving soldiers better weapons, but by building what he called a "shared consciousness"—a culture where everyone, regardless of role or rank, operated from the same understanding of the mission, the constraints, and the reasoning behind decisions. The result was an organization that could move fast while staying coherent, which is a harder combination to achieve than it sounds.
+
+For a software team, shared consciousness looks like a few concrete things. Shared briefs that answer what you're building, for whom, and why—and what success actually looks like. A shared glossary so that when someone says "user" or "event" or "session," everyone means the same thing, because ambiguous language produces ambiguous systems. Shared constraints that document what you're explicitly not doing and what tradeoffs you've already made. And shared architectural invariants—the rules the system must always obey, the patterns you've agreed on, the lines you don't cross.
+
+When this exists and is written down, everyone builds inside the same mental model, including the agents.
+
+---
+
+## Why Context Beats Prompt Tricks
+
+There's no shortage of advice about how to write better prompts—smarter instructions, better few-shot examples, carefully structured system prompts. These things can make a real difference in a specific interaction, but they're the wrong lever if you're trying to solve a team-level problem.
+
+A team that has documented its architectural principles, its design constraints, and its product reasoning can give that context to any agent on any task and get outputs that actually fit. A team that relies on one developer's carefully crafted prompts gets consistency for that developer, on that task, until they're out sick or move on. The difference comes down to durability: clever prompts are personal, and shared context persists across people, roles, and sessions.
+
+---
+
+## Product, Design, and Engineering in the Agent Era
+
+Each discipline has a distinct role in building shared context, and a real stake in making sure agents work within it.
+
+Product defines the outcome metrics agents optimize for. What does a good solution look like? What user problems are off-limits to solve in ways that create new ones? Without this, agents will make tradeoffs that are technically reasonable but wrong for the product—and those decisions will be hard to trace back to the moment they were made.
+
+Design encodes the UX principles agents have to respect: accessibility standards, interaction patterns, the reasoning behind layout decisions. Without this, agents will produce interfaces that are functional but feel off in ways that are hard to articulate until a user complains about them.
+
+Engineering defines the durability constraints—performance budgets, security requirements, the architectural patterns that exist for reasons predating the current sprint and can't just be refactored away because an agent sees a cleaner approach.
+
+The boundaries agents operate inside only exist if all three disciplines actually build them together, which means this isn't something engineering can own alone.
+
+---
+
+## What This Looks Like in Practice
+
+Canonical PRD templates that agents can read before planning any feature give agents the product context they need to make reasonable decisions—not as a prompt, but as a living document the whole team maintains. ADR repositories (Architecture Decision Records) that capture not just what was decided but why tend to work surprisingly well with agents; they're actually quite good at respecting constraints when they understand the reasoning behind them.
+
+"How we reason about X" docs are useful for the recurring judgment calls that teams relitigate every sprint—how you think about performance vs. speed of delivery, how you handle third-party integrations, what your philosophy on error handling is. Writing this down once doesn't just help agents; it forces the team to actually agree on an answer. And explicit norms around AI usage—where agents are trusted to move fast, where human review is required, what kinds of decisions shouldn't be delegated—belong in your repo alongside your code, not buried in a Notion page nobody opens.
+
+If context is infrastructure, it deserves to be treated like it: versioned, reviewed, maintained, and accessible to everyone who needs it. The teams that do this won't just use agents more effectively—they'll build more coherent products, because they'll have finally written down what "coherent" means.
