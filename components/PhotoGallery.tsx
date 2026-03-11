@@ -12,7 +12,7 @@ import { DraggablePhotoCard } from '@/components/DraggablePhotoCard';
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import { CloudinaryImage } from '@/lib/cloudinary-client';
 import { SortOption } from '@/lib/cloudinary';
-import { getAlbumConfig } from '@/lib/album-config';
+import { getAlbumDisplayConfig } from '@/lib/album-config';
 import { AlbumConfig } from '@/types/album';
 import { toast } from 'sonner';
 import {
@@ -247,12 +247,12 @@ export function PhotoGallery({ albumSlug }: PhotoGalleryProps = {}) {
   // Fetch album configuration
   useEffect(() => {
     if (albumSlug) {
-      const config = getAlbumConfig(albumSlug);
-      setAlbumConfig(config);
+      const config = getAlbumDisplayConfig(albumSlug);
+      setAlbumConfig(config as AlbumConfig);
     } else {
       // Fallback for legacy usage (no album slug)
       setAlbumConfig({
-      title: "Steve's 40th Birthday",
+        title: "Steve's 40th Birthday",
         subtitle: "Colorado Trip 2025",
         cloudinaryFolder: "2025-steves-40th",
         password: "pumphouse",
