@@ -14,7 +14,3 @@ export interface AlbumSession {
   albumSlug: string;
   [key: string]: any;
 }
-
-export interface AlbumConfigs {
-  [albumSlug: string]: AlbumConfig;
-}
