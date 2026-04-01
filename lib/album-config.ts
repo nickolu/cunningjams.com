@@ -1,140 +1,105 @@
-import { AlbumConfig, AlbumConfigs } from '../types/album';
+import { AlbumConfig } from '../types/album';
 
 const GLOBAL_ADMIN_PASSWORD = process.env.GLOBAL_ADMIN_PASSWORD || 'admin2025';
 
-const albumConfigs: AlbumConfigs = {
-  'steves-40th-birthday': {
-    title: "Steve's 40th Birthday",
-    subtitle: "Colorado Trip 2025",
-    cloudinaryFolder: "2025-steves-40th",
-    password: process.env.STEVES_40TH_ALBUM_PASSWORD || "pumphouse",
-    adminPassword: process.env.STEVES_40TH_ADMIN_PASSWORD || "admin2025"
-  },
-  '2025-steves-40th': {
-    title: "Steve's 40th Birthday",
-    subtitle: "Colorado Trip 2025",
-    cloudinaryFolder: "2025-steves-40th",
-    password: process.env.STEVES_40TH_ALBUM_PASSWORD || "pumphouse",
-    adminPassword: process.env.STEVES_40TH_ADMIN_PASSWORD || "admin2025"
-  },
-  'avatar-maker': {
-    title: "Avatar Maker",
-    subtitle: "Avatar Maker 2025",
-    cloudinaryFolder: "avatar-maker",
-    password: process.env.DEFAULT_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.DEFAULT_ADMIN_PASSWORD || "avatar-maker-admin"
-  },
-  'whowouldwininator-battle-scenes': {
-    title: "Who Would Wininator Battle Scenes",
-    subtitle: "Who Would Wininator Battle Scenes",
-    cloudinaryFolder: "whowouldwininator-battle-scenes",
-    password: process.env.DEFAULT_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.DEFAULT_ADMIN_PASSWORD || "whowouldwininator-battle-scenes-admin"
-  },
-  "whowouldwininator-portraits": {
-    title: "Who Would Wininator Portraits",
-    subtitle: "Who Would Wininator Portraits",
-    cloudinaryFolder: "whowouldwininator-portraits",
-    password: process.env.DEFAULT_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.DEFAULT_ADMIN_PASSWORD || "whowouldwininator-portraits-admin"
-  },
-  "whowouldwininator-story-sections": {
-    title: "Who Would Wininator Story Sections",
-    subtitle: "Who Would Wininator Story Sections",
-    cloudinaryFolder: "whowouldwininator-story-sections",
-    password: process.env.DEFAULT_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.DEFAULT_ADMIN_PASSWORD || "whowouldwininator-story-sections-admin"
-  },
-  "2025-vinhs-cabin": {
-    title: "2025 September Vinh's Cabin",
-    subtitle: "2025 September Vinh's Cabin",
-    cloudinaryFolder: "2025-vinhs-cabin",
-    password: process.env.VINHS_CABIN_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.VINHS_CABIN_ADMIN_PASSWORD || "2025-vinhs-cabin-admin"
-  },
-  "manchat": {
-    title: "ManChat",
-    subtitle: "ManChat",
-    cloudinaryFolder: "manchat",
-    password: process.env.MANCHAT_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.MANCHAT_ADMIN_PASSWORD || "manchat-admin"
-  },
-  "2025-lemon-ave-fall-carnival": {
-    title: "2025 Lemon Ave Fall Carnival",
-    subtitle: "2025 Lemon Ave Fall Carnival",
-    cloudinaryFolder: "2025-lemon-ave-fall-carnival",
-    password: process.env.LEMON_AVE_FALL_CARNIVAL_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.LEMON_AVE_FALL_CARNIVAL_ADMIN_PASSWORD || "2025-lemon-ave-fall-carnival-admin"
-  },
-  "vinhs-40th": {
-    title: "Vinh's 40th Birthday",
-    subtitle: "Vinh's 40th Birthday",
-    cloudinaryFolder: "vinhs-40th",
-    password: process.env.VINHS_40TH_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.VINHS_40TH_ADMIN_PASSWORD || "vinhs-40th-admin"
-  },
-  "2026-paxtons-birthday": {
-    title: "Paxton's Birthday",
-    subtitle: "Paxton's Birthday",
-    cloudinaryFolder: "2026-paxtons-birthday",
-    password: process.env.PAXTONS_BIRTHDAY_ALBUM_PASSWORD || "1234",
-    adminPassword: process.env.PAXTONS_BIRTHDAY_ADMIN_PASSWORD || "2026-paxtons-birthday-admin"
-  }
-};
-
-function getAlbumConfigs(): AlbumConfigs {
-  return albumConfigs;
+/**
+ * Converts a kebab-case album slug to UPPER_SNAKE_CASE for env var lookup.
+ * e.g., "2025-steves-40th" → "2025_STEVES_40TH"
+ */
+function slugToEnvKey(slug: string): string {
+  return slug.replace(/-/g, '_').toUpperCase();
 }
 
+/**
+ * Converts a kebab-case album slug to a human-readable title.
+ * e.g., "2025-steves-40th" → "2025 Steves 40th"
+ * Override with ALBUM_{SLUG}_TITLE env var for custom titles.
+ */
+function slugToTitle(slug: string): string {
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Checks whether an album exists by looking for its password env var.
+ * Convention: ALBUM_{SLUG_UPPER}_PASSWORD must be set.
+ */
+export function albumExists(albumSlug: string): boolean {
+  if (!albumSlug) return false;
+  const key = slugToEnvKey(albumSlug);
+  return !!process.env[`ALBUM_${key}_PASSWORD`];
+}
+
+/**
+ * Dynamically builds an AlbumConfig from env vars and slug conventions.
+ * Returns null if the album doesn't exist (no password env var set).
+ *
+ * Env var conventions:
+ * - ALBUM_{SLUG}_PASSWORD (required — defines album existence)
+ * - ALBUM_{SLUG}_ADMIN_PASSWORD (optional — falls back to GLOBAL_ADMIN_PASSWORD)
+ * - ALBUM_{SLUG}_TITLE (optional — falls back to slugToTitle())
+ * - ALBUM_{SLUG}_SUBTITLE (optional — falls back to title)
+ */
 export function getAlbumConfig(albumSlug: string): AlbumConfig | null {
-  const configs = getAlbumConfigs();
-  if (!configs[albumSlug]) {
-    return {
-      title: "Photo Album",
-      subtitle: "2025",
-      cloudinaryFolder: albumSlug,
-      password: "pumphouse",
-      adminPassword: "admin2025",
-      commentsEnabled: false
-    }
-  }
-  // Return the config with commentsEnabled defaulting to false if not specified
-  const config = configs[albumSlug];
+  if (!albumSlug) return null;
+
+  const key = slugToEnvKey(albumSlug);
+  const password = process.env[`ALBUM_${key}_PASSWORD`];
+
+  if (!password) return null;
+
+  const title = process.env[`ALBUM_${key}_TITLE`] || slugToTitle(albumSlug);
+  const subtitle = process.env[`ALBUM_${key}_SUBTITLE`] || title;
+  const adminPassword = process.env[`ALBUM_${key}_ADMIN_PASSWORD`] || GLOBAL_ADMIN_PASSWORD || '';
+
   return {
-    ...config,
-    commentsEnabled: config.commentsEnabled ?? false
+    title,
+    subtitle,
+    cloudinaryFolder: albumSlug,
+    password,
+    adminPassword,
+    commentsEnabled: false,
   };
 }
 
-export function validateAlbumPassword(albumSlug: string, password: string): { authenticated: boolean; isAdmin: boolean } {
-  // Check global admin password first
-  if (password === GLOBAL_ADMIN_PASSWORD) {
+/**
+ * Returns display-only album config derived from slug alone.
+ * Safe for client components — no env var access needed.
+ * Always returns a config (does not check album existence).
+ */
+export function getAlbumDisplayConfig(albumSlug: string): Pick<AlbumConfig, 'title' | 'subtitle' | 'cloudinaryFolder' | 'commentsEnabled'> {
+  return {
+    title: slugToTitle(albumSlug),
+    subtitle: slugToTitle(albumSlug),
+    cloudinaryFolder: albumSlug,
+    commentsEnabled: false,
+  };
+}
+
+/**
+ * Validates a password against an album's configured passwords.
+ * GLOBAL_ADMIN_PASSWORD grants admin access to any album.
+ */
+export function validateAlbumPassword(
+  albumSlug: string,
+  password: string
+): { authenticated: boolean; isAdmin: boolean } {
+  if (GLOBAL_ADMIN_PASSWORD && password === GLOBAL_ADMIN_PASSWORD) {
     return { authenticated: true, isAdmin: true };
   }
 
   const config = getAlbumConfig(albumSlug);
-  if (!config) {
-    return { authenticated: false, isAdmin: false };
-  }
+  if (!config) return { authenticated: false, isAdmin: false };
 
-  // Check album-specific admin password
-  if (password === config.adminPassword) {
+  if (config.adminPassword && password === config.adminPassword) {
     return { authenticated: true, isAdmin: true };
   }
 
-  // Check album-specific regular password
   if (password === config.password) {
     return { authenticated: true, isAdmin: false };
   }
 
   return { authenticated: false, isAdmin: false };
-}
-
-export function getAllAlbumSlugs(): string[] {
-  const configs = getAlbumConfigs();
-  return Object.keys(configs);
-}
-
-export function albumExists(albumSlug: string): boolean {
-  return getAlbumConfig(albumSlug) !== null;
 }

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { CldUploadWidget, CloudinaryUploadWidgetInfo, CloudinaryUploadWidgetResults, CloudinaryUploadWidgetOptions } from 'next-cloudinary';
 import { toast } from 'sonner';
-import { getAlbumConfig } from '@/lib/album-config';
+import { getAlbumDisplayConfig } from '@/lib/album-config';
 
 interface DirectUploadModalProps {
   albumSlug?: string;
@@ -32,7 +32,7 @@ export function DirectUploadModal({
   }
 
   // Get the cloudinary folder from album config
-  const albumConfig = albumSlug ? getAlbumConfig(albumSlug) : null;
+  const albumConfig = albumSlug ? getAlbumDisplayConfig(albumSlug) : null;
   const cloudinaryFolder = albumConfig?.cloudinaryFolder || 'default-uploads';
 
   const handleSuccess = (result: CloudinaryUploadWidgetResults) => {
