@@ -1,0 +1,125 @@
+---
+title: Stress-Testing UX Principles With AI Agents
+date: '2026-03-22'
+description: >-
+  How I used competing AI agents to discover which UX principles actually change
+  design decisions — and which ones just sound good.
+author: Nickolus Cunningham
+tags:
+  - AI
+  - UX
+  - Product Design
+  - Software Development
+---
+Most UX principles are decorative. They sound right in a design doc, get nodded at in a review, and change nothing about how the product actually gets built. "Be consistent." "Reduce friction." "Match user expectations." These are true the way horoscopes are true — broad enough to apply to anything, specific enough to apply to nothing.
+
+I wanted to find principles that actually have teeth. Principles where following them leads to measurably different design choices than ignoring them. Here's how I got there, and the process itself turned out to be more interesting than the result.
+
+* * *
+
+## The Setup
+
+I'm building TapJournal, a journaling app where you tap through structured selections — activities, people, moods, feelings — and an LLM generates a narrative journal entry from those taps. No typing. The core bet is that journaling can be effortless if you replace the blank page with tap targets.
+
+The app works, but as it's grown, some inconsistencies have crept in. Buttons labeled differently across screens. Steps that feel mandatory when they should be optional. Interaction patterns that shift without reason. The kind of drift that happens when you're building feature by feature without a governing set of principles.
+
+So I set out to define those principles. And rather than sitting in a room with a whiteboard, I ran an experiment.
+
+* * *
+
+## Round 1: Ask the Experts
+
+I started by consulting several LLMs — Gemini 2.5 Pro, GPT-5.4, and Claude — each playing the role of a senior UX designer. I gave them the same context about the app and asked for proposed principles with interaction model mappings.
+
+The responses were useful but unsurprising. Gemini proposed a "scrolling canvas" to replace the wizard flow. GPT-5.4 proposed a decision matrix for interaction types. Both identified the same anti-patterns: inconsistent button labels, auto-advance used inconsistently, optional steps presented as mandatory.
+
+I pushed back on one recommendation — "always require explicit confirmation after every tap" — and had GPT-5.4 re-evaluate it through Nielsen's 10 usability heuristics. That produced a genuinely useful framework: auto-advance when a single tap fully expresses intent, require explicit action when input is compositional. We called this "structured asymmetry."
+
+From this first round, I had a reasonable set of principles. They felt right. But feeling right isn't the same as being right.
+
+* * *
+
+## Round 2: The A/B Test
+
+Here's where it got interesting. Instead of trusting the principles, I decided to test them.
+
+I identified three real UX problems in the app:
+
+1.  The 5-step wizard feels fragmented
+    
+2.  Users get no feedback during recording
+    
+3.  Optional enrichment feels mandatory
+    
+
+For each problem, I spun up three AI agents:
+
+*   **Agent A:** No principles. Just "you're a senior UX designer, here's the problem, recommend a solution."
+    
+*   **Agent B:** Given only the single principle I thought was most relevant to that problem.
+    
+*   **Agent C:** Given the full principle set.
+    
+
+Nine agents total, all running in parallel. Then I compared the outputs.
+
+The results were clarifying.
+
+**For the wizard fragmentation problem**, all three agents recommended the same structural solution — collapse the wizard into a single scrollable surface. Agent A got there with no principles at all. The principle I'd written for this ("Presence Over Progression") wasn't wrong, but it wasn't doing any work. Any competent designer reaches the same conclusion without it.
+
+**For the feedback problem**, the principle made a real difference. Agent A proposed a horizontal chip strip showing prior selections as tokens. Agent B, guided by a principle about reflecting choices back as narrative, proposed a growing sentence fragment — "I spent time cooking with Sam, feeling content..." — that mirrors the final journal entry. That's a fundamentally different and better solution for a journaling app. The principle pushed the design from data display toward meaning.
+
+**For the optional enrichment problem**, all three agents converged on the same structure, but the principled agents added real refinements — like placing the Generate button above the enrichment sections (signaling "you're already done") and using question-based labels instead of system terms.
+
+The scorecard: one principle was dead weight, one was genuinely load-bearing, and the rest added polish but didn't change the structural answer.
+
+* * *
+
+## Round 3: The Inversion
+
+With that data, I flipped the process. Instead of testing my principles against problems, I asked four different AI agents — each with a different analytical framing — to independently propose principles for the product. A UX designer, a Nielsen's heuristics specialist, a human-agent interaction expert, and GPT-5.4 each got the same product context and the same prompt: propose 6 UX principles specific enough that they'd "sound wrong for most apps but right for TapJournal."
+
+Then I looked for convergence. Ideas that multiple agents independently arrived at are probably real. Ideas only one agent proposed might be brilliant or might be noise.
+
+Four clusters emerged with strong convergence (3-4 out of 4 agents):
+
+**"Every tap is a complete thought."** A single activity tap should produce a valid journal entry. The app competes against the user deciding not to journal at all.
+
+**"The AI is a mirror, not a ghostwriter."** The generated narrative must be faithful to selections, sound like the user, and never invent details the user didn't provide.
+
+**"Discovery lives in the pattern, not the entry."** Self-discovery comes from correlations across many entries, not from any single entry being perfect. The corpus is the product.
+
+**"The vocabulary is the product."** The words available for tapping define the boundaries of what users can express. If "lonely" isn't an option, the user can't be lonely in their journal.
+
+None of these were in my original principle set. Every one of them would change real design decisions.
+
+* * *
+
+## What I Learned About the Process
+
+The principles I started with were mostly about interaction mechanics — how buttons should behave, how screens should transition, how motion should feel. They were useful as a design spec but they weren't principles. They described what good design looks like for this app without explaining what good design is for.
+
+The principles that emerged from the stress test are about the product's relationship with the user. They answer questions like: what's the minimum viable journal entry? Who owns the generated words? Where does self-discovery actually come from? These are the questions that should govern every design decision, and they're the ones I wouldn't have reached by sitting alone with a whiteboard.
+
+The method — using AI agents as independent consultants, then looking for convergence — turned out to be a genuinely useful design research technique. Not because any individual agent said something brilliant (though some did), but because the pattern of agreement across independent perspectives revealed which ideas are load-bearing and which are just plausible.
+
+The test of a principle isn't whether it sounds right. It's whether it changes a decision you would have made without it.
+
+* * *
+
+## The Principles
+
+For the curious, here's what we landed on:
+
+1.  **Every Tap Is a Complete Thought** — A single tap should produce a meaningful journal entry. No minimum input threshold. The keyboard is the enemy.
+    
+2.  **The AI Is a Mirror, Not a Ghostwriter** — Generated entries must be faithful to selections, sound like the user, and never narrate beyond what was tapped.
+    
+3.  **Discovery Lives in the Pattern** — The value of any single entry is low. The value of the pattern across entries is everything. Show facts and patterns, never judgments.
+    
+4.  **The Vocabulary Is the Product** — The words available for tapping define the boundaries of what users can express. Curate with the care of a poet and the rigor of a psychologist.
+    
+5.  **Return Through Ritual, Not Reminders** — No streaks, no nagging. The interaction itself should feel satisfying enough to create a pull. The generated entry is a gift, not a task output.
+    
+
+Each of these would sound wrong for most apps. Each of them changes a decision I'd make without it. That's the bar.
