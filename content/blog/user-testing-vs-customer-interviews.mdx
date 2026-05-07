@@ -1,0 +1,49 @@
+---
+title: "User Testing Is Not the Same as Customer Interviews"
+date: '2026-05-07'
+description: "Customer interviews give you opinions. User testing gives you evidence. Most teams skip the latter."
+author: Nickolus Cunningham
+tags:
+  - UX
+  - Software Engineering
+  - Product
+---
+
+I want to soapbox for a moment about user testing, something I've seen most teams skip--us included.
+
+I had the privilege of doing some work in a user-testing lab for Intuit/TurboTax, so I have a reasonably informed opinion here (though I'm not an expert).
+
+A suggestion that we should be interviewing customers about their needs or getting feedback on a feature idea came up recently. I don't disagree, and we can get meaningful signal from customer interviews, but it's not the same thing as deliberate user testing, and I think it's easy to conflate them.
+
+Here's the difference.
+
+## Customer Interviews
+
+We bring a list of topics, maybe show a prototype, and ask things like "Does this meet your needs?" "Do you like it?" "What would you change?" It's an entirely subjective process. There are some problems with this feedback mechanism:
+
+- **Implicit bias is hard to avoid.** The nature of the conversation can steer customers toward the answers they think we want to hear.
+- **Customers often don't know what they want until they see it.**
+- **"Do you like it?" doesn't tell us if it works.** A customer telling us whether they like it does not really inform us if it's usable or solves their problem.
+- **Anecdotes are not data.** One or two customer opinions isn't meaningful data (many anecdotes do not make data), and weighing opinions too heavily can lead us to the wrong call.
+
+## User Testing
+
+In user testing, we put a user in front of an interactive feature--a working prototype, clickable mock-ups--and give them an explicit goal. Something like: "Create a user, then configure an alert to email them whenever XYZ meets a certain threshold." Then you observe. You don't steer, you don't help, you just watch whether they can accomplish the goal. Pass or fail.
+
+Along the way you'll glean a thousand insights about the UX: where they hit a dead end and have to backtrack, where they get lost, what they wish the interface had.
+
+By contrast with customer interviews:
+
+- **Bias is dramatically reduced** through good user testing methodology.
+- **Customer opinions and UX issues surface naturally** through the process.
+- **Pass/fail gives you a hard, actionable metric** to drive further iteration.
+
+## So What?
+
+I'm not saying don't do customer interviews. We should do more, as much as possible. But we should treat that data for what it is: subjective, opinionated, sometimes misleading.
+
+And we should be user testing any significant feature before it ships.
+
+Great book on the topic if you want to go deeper: *Don't Make Me Think* by Steve Krug.
+
+Agree? Disagree? I'd love to hear other opinions on this and brainstorm ideas about how we can make user testing a regular part of our SDLC.
